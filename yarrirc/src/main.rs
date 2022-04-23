@@ -1,4 +1,4 @@
-use yarrlib::add_one;
+use yarrirclib::add_one;
 
 fn main() {
     let x = 1;

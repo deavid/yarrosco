@@ -6,9 +6,9 @@ version = 3
 name = "yarrirc"
 version = "0.1.0"
 dependencies = [
- "yarrlib",
+ "yarrirclib",
 ]
 
 [[package]]
-name = "yarrlib"
+name = "yarrirclib"
 version = "0.1.0"
