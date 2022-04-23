@@ -1,11 +1,14 @@
 [package]
-name = "yarrpass"
+name = "yarrpasslib"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-yarrpasslib = { path = "../yarrpasslib" }
+rpassword = "6.0"
+orion = { version ="0.17", features = ["safe_api"] }
+base64 = "0.13"
 anyhow = "1.0"
-env_logger = "0.9"
+thiserror = "1.0"
+log = "0.4"
