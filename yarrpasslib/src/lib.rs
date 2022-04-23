@@ -4,6 +4,7 @@ use anyhow::Result;
 use log::debug;
 use orion::aead;
 use orion::kdf;
+use std::env;
 use std::time::Instant;
 use thiserror::Error;
 
@@ -22,6 +23,15 @@ pub fn flush() {
     std::io::stdout()
         .flush()
         .expect("Error flushing STDOUT :-(");
+}
+
+pub fn password() -> Result<Vec<u8>> {
+    let pass = env::var("YARROSCO_PASSPHRASE").unwrap_or_default();
+    if pass.is_empty() {
+        get_password("Input Password")
+    } else {
+        Ok(pass.into_bytes())
+    }
 }
 
 pub fn get_password(ask: &str) -> Result<Vec<u8>> {
@@ -85,7 +95,8 @@ impl SaltAndCipher {
     }
     pub fn decrypt(&self, pass: &[u8]) -> Result<String> {
         let key = self.derive_key(pass)?;
-        let decrypted_data = aead::open(&key, &self.ciphertext)?;
+        let decrypted_data = aead::open(&key, &self.ciphertext)
+            .context("error decrypting data - is the passphrase correct?")?;
         Ok(std::str::from_utf8(&decrypted_data)?.to_string())
     }
     pub fn new(pass: &[u8], message: &str) -> Result<Self> {

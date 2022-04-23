@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 
 use yarrpasslib::SaltAndCipher;
-use yarrpasslib::{get_password, get_password_str};
+use yarrpasslib::{get_password_str, password};
 
 fn main() -> Result<()> {
     // CHECK THE RUST_LOG ENV VARIABLE
@@ -21,7 +21,7 @@ fn decode(ciphertext: String) -> Result<()> {
     println!("**** DECODE ****");
     let sc = SaltAndCipher::deserialize(&ciphertext)?;
 
-    let pass = get_password("Input Password")?;
+    let pass = password()?;
     let dec = sc.decrypt(&pass)?;
     println!("decrypted_data: {:?}", dec);
     Ok(())
@@ -29,7 +29,7 @@ fn decode(ciphertext: String) -> Result<()> {
 
 fn encode() -> Result<()> {
     println!("**** ENCODE ****");
-    let pass = get_password("Input Password")?;
+    let pass = password()?;
     let secret_message = get_password_str("Input Secret Message")?;
     let sc = SaltAndCipher::new(&pass, &secret_message)?;
     let token = sc.serialize();
