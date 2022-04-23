@@ -1,13 +1,11 @@
 [package]
-name = "yarrirc"
+name = "yarrpass"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-yarrirclib = { path = "../yarrirclib" }
-irc = "0.15"
-tokio = { version = "1.17", features = ["full"] }
-futures = "0.3"
-failure = "0.1"
+rpassword = "6.0"
+orion = { version ="0.17", features = ["safe_api"] }
+base64 = "0.13"
