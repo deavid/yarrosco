@@ -1137,19 +1137,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "yarrirc"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "env_logger",
- "futures",
- "irc",
- "log",
- "tokio",
- "yarrcfg",
-]
-
-[[package]]
 name = "yarrpass"
 version = "0.1.0"
 dependencies = [
@@ -1160,6 +1147,19 @@ dependencies = [
  "orion",
  "rpassword",
  "thiserror",
+]
+
+[[package]]
+name = "yarrtwitch"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "env_logger",
+ "futures",
+ "irc",
+ "log",
+ "tokio",
+ "yarrcfg",
 ]
 
 [[package]]
