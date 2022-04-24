@@ -4,7 +4,7 @@ use serde_derive::Deserialize;
 use std::collections::BTreeMap;
 use std::thread;
 use thiserror::Error;
-use yarrpasslib::{password, SaltAndCipher};
+use yarrpass::{password, SaltAndCipher};
 
 #[derive(Error, Debug)]
 pub enum CfgError {

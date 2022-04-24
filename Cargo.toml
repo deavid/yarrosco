@@ -3,6 +3,5 @@
 members = [
     "yarrirc",
     "yarrpass",
-    "yarrpasslib",
     "yarrcfg",
 ]

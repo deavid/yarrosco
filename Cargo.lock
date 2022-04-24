@@ -1132,7 +1132,7 @@ dependencies = [
  "sha2",
  "thiserror",
  "toml",
- "yarrpasslib",
+ "yarrpass",
 ]
 
 [[package]]
@@ -1153,16 +1153,8 @@ name = "yarrpass"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "env_logger",
- "yarrpasslib",
-]
-
-[[package]]
-name = "yarrpasslib"
-version = "0.1.0"
-dependencies = [
- "anyhow",
  "base64",
+ "env_logger",
  "log",
  "orion",
  "rpassword",

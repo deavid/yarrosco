@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 
-use yarrpasslib::SaltAndCipher;
-use yarrpasslib::{get_password_str, password};
+use yarrpass::SaltAndCipher;
+use yarrpass::{get_password_str, password};
 
 fn main() -> Result<()> {
     if std::env::var("RUST_LOG").is_err() {
