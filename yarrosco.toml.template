@@ -6,3 +6,8 @@ channels = ["#your_twitch_username", "#our_other_channel_name"]
 # the auth token will be automatically preceded by "oauth:", please DO NOT add "oauth:" in this section.
 oauth_token = '%%TWITCH_OAUTH_TOKEN%%'
 
+
+[matrix]
+home_server = "matrix.org"
+access_token = '%%MATRIX_ACCESS_TOKEN%%'
+room_id = "roomID:matrix.org"

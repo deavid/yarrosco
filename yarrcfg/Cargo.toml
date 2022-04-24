@@ -5,6 +5,14 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "yarrcfg"
+path = "src/lib.rs"
+
+[[bin]]
+name = "yarrcfg"
+path = "src/bin.rs"
+
 [dependencies]
 yarrpass = { path = "../yarrpass" }
 toml = "0.5"
@@ -15,3 +23,5 @@ hex = "0.4"
 anyhow = "1.0"
 log = "0.4"
 thiserror = "1.0"
+env_logger = "0.9"
+

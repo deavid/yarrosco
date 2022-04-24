@@ -1125,6 +1125,7 @@ name = "yarrcfg"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "env_logger",
  "hex",
  "log",
  "serde",

@@ -15,6 +15,14 @@ pub enum CfgError {
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub twitch: Option<Twitch>,
+    pub matrix: Option<Matrix>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Matrix {
+    pub home_server: String,
+    pub access_token: SecString,
+    pub room_id: String,
 }
 
 #[derive(Deserialize, Debug)]
