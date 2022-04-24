@@ -47,10 +47,9 @@ async fn main() -> Result<()> {
                 true => error!("E[{:?}] < {:?}", r, data),
                 false => {
                     match r {
-                        Response::RPL_MOTD | Response::RPL_MOTDSTART | Response::RPL_ENDOFMOTD => {}
-                        _ => {
-                            debug!("< [{:?}] {:?}", r, data)
-                        }
+                        Response::RPL_MOTD | Response::RPL_MOTDSTART => {}
+                        Response::RPL_ENDOFMOTD => info!("IRC Connection successful."),
+                        _ => debug!("< [{:?}] {:?}", r, data)
                     };
                 }
             },

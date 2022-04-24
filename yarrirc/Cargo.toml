@@ -5,8 +5,16 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "yarrirc"
+path = "src/lib.rs"
+
+[[bin]]
+name = "yarrirc"
+path = "src/bin.rs"
+
+
 [dependencies]
-yarrirclib = { path = "../yarrirclib" }
 yarrcfg = { path = "../yarrcfg" }
 irc = "0.15"
 tokio = { version = "1.17", features = ["full"] }
