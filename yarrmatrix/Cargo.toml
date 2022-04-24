@@ -1,0 +1,18 @@
+[package]
+name = "yarrmatrix"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "yarrmatrix"
+path = "src/lib.rs"
+
+[[bin]]
+name = "yarrmatrix"
+path = "src/bin.rs"
+
+[dependencies]
+yarrpass = { path = "../yarrpass" }
+matrix-sdk = "0.4"

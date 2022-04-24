@@ -2,6 +2,7 @@
 
 members = [
     "yarrtwitch",
+    "yarrmatrix",
     "yarrpass",
     "yarrcfg",
 ]
