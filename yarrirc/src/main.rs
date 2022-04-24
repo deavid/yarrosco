@@ -1,8 +1,17 @@
+use anyhow::{Ok, Result};
 use futures::prelude::*;
 use irc::client::prelude::*;
+use yarrcfg::parse_config;
 
 #[tokio::main]
-async fn main() -> Result<(), failure::Error> {
+async fn main() -> Result<()> {
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", "INFO");
+    }
+    env_logger::init();
+
+    parse_config()?;
+    return Ok(());
     // We can also load the Config at runtime via Config::load("path/to/config.toml")
     let config = Config {
         nickname: Some("the-irc-crate".to_owned()),

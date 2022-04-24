@@ -4,9 +4,7 @@ use yarrpasslib::SaltAndCipher;
 use yarrpasslib::{get_password_str, password};
 
 fn main() -> Result<()> {
-    // CHECK THE RUST_LOG ENV VARIABLE
     if std::env::var("RUST_LOG").is_err() {
-        // IF NOT SET, SET IT TO INFO.
         std::env::set_var("RUST_LOG", "INFO");
     }
     env_logger::init();
