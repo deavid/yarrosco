@@ -1,6 +1,8 @@
 [twitch]
 username = 'your_twitch_username'
-channels = ["your_twitch_username", "our_other_channel_name"]
+hostname = 'irc.chat.twitch.tv:6697'
+channels = ["#your_twitch_username", "#our_other_channel_name"]
 # You can store here directly the Oauth token without having to use encryption or yarrsecrets.toml
+# the auth token will be automatically preceded by "oauth:", please DO NOT add "oauth:" in this section.
 oauth_token = '%%TWITCH_OAUTH_TOKEN%%'
 

@@ -1,27 +1,54 @@
 use anyhow::{Context, Result};
-use log::{debug, info, warn};
+use log::{debug, warn};
 use serde_derive::Deserialize;
 use std::collections::BTreeMap;
+use std::thread;
+use thiserror::Error;
 use yarrpasslib::{password, SaltAndCipher};
+
+#[derive(Error, Debug)]
+pub enum CfgError {
+    #[error("Invalid port number {0:?}")]
+    InvalidPortNumber(String),
+}
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
-    pub twitch: Twitch,
+    pub twitch: Option<Twitch>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Twitch {
+    pub hostname: String,
     pub username: String,
     pub channels: Vec<String>,
     pub oauth_token: SecString,
 }
 
+impl Twitch {
+    pub fn server(&self) -> String {
+        self.hostname
+            .split(':')
+            .next()
+            .unwrap_or_default()
+            .to_string()
+    }
+    pub fn port(&self) -> Result<Option<u16>> {
+        let port = self.hostname.split(':').nth(1);
+        let port = port.map(|f| {
+            f.parse::<u16>()
+                .map_err(|_| CfgError::InvalidPortNumber(f.to_string()))
+        });
+        let port = port.map_or(Ok(None), |v| v.map(Some))?;
+        Ok(port)
+    }
+}
 #[derive(Deserialize, Debug)]
 pub struct SecConfig {
     pub secrets: BTreeMap<String, Secrets>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Secrets {
     pub placeholder: String,
     pub secret: SecString,
@@ -36,7 +63,8 @@ pub struct SecReplace {
 }
 
 /// SecString is basically a string that doesn't have debug output by default.
-pub struct SecString(String);
+#[derive(Clone)]
+pub struct SecString(pub String);
 
 impl<'de> serde::Deserialize<'de> for SecString {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -56,7 +84,7 @@ impl std::fmt::Debug for SecString {
     }
 }
 
-pub fn parse_config() -> Result<()> {
+pub fn parse_config() -> Result<Config> {
     use std::fs::File;
     use std::io::prelude::*;
     use std::path::Path;
@@ -77,22 +105,33 @@ pub fn parse_config() -> Result<()> {
     } else {
         password()?
     };
-    // password, SaltAndCipher
+    let mut handles = vec![];
     for (name, v) in cfg.secrets.iter() {
-        // v.secret --> decode this!
-        let sac = SaltAndCipher::deserialize(&v.secret.0).with_context(|| {
-            format!(
-                "while processing secret for {:?}, placeholder {:?}",
-                name, v.placeholder
-            )
-        })?;
-        let secret = sac.decrypt(&pass)?;
-        let s = SecReplace {
-            name: name.to_string(),
-            placeholder: v.placeholder.clone(),
-            secret: SecString(secret),
-            use_count: 0,
-        };
+        let name = name.clone();
+        let v = v.clone();
+        let pass = pass.clone();
+        let handle = thread::spawn(move || -> Result<SecReplace> {
+            let sac = SaltAndCipher::deserialize(&v.secret.0).with_context(|| {
+                format!(
+                    "while processing secret for {:?}, placeholder {:?}",
+                    name, v.placeholder
+                )
+            })?;
+            let secret = sac.decrypt(&pass)?;
+            let s = SecReplace {
+                name: name.to_string(),
+                placeholder: v.placeholder,
+                secret: SecString(secret),
+                use_count: 0,
+            };
+            Ok(s)
+        });
+        handles.push(handle);
+    }
+    for handle in handles {
+        let s = handle
+            .join()
+            .expect("error in thread while decoding secrets")?;
         secrets.push(s);
     }
 
@@ -123,9 +162,9 @@ pub fn parse_config() -> Result<()> {
             );
         }
         secret.use_count = count - zcount;
-        info!("Used secret {:?} {} times", &secret.name, secret.use_count)
+        debug!("Used secret {:?} {} times", &secret.name, secret.use_count)
     }
     let cfg: Config = toml::from_str(&s).with_context(|| format!("couldn't parse {}", display))?;
     debug!("Config: {:?}", &cfg);
-    Ok(())
+    Ok(cfg)
 }

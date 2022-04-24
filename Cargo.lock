@@ -1130,6 +1130,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "sha2",
+ "thiserror",
  "toml",
  "yarrpasslib",
 ]
@@ -1142,6 +1143,7 @@ dependencies = [
  "env_logger",
  "futures",
  "irc",
+ "log",
  "tokio",
  "yarrcfg",
  "yarrirclib",
