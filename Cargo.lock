@@ -2055,6 +2055,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb417d091e8dd5a633e4e5998231a156049d7fcc221045cfdc0642eb72067732"
 dependencies = [
  "paste",
+ "rand 0.8.5",
  "ruma-identifiers-macros",
  "ruma-identifiers-validation",
  "ruma-serde",
@@ -2893,8 +2894,14 @@ dependencies = [
 name = "yarrmatrix"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "env_logger",
+ "futures",
+ "log",
  "matrix-sdk",
- "yarrpass",
+ "ruma-identifiers",
+ "tokio",
+ "yarrcfg",
 ]
 
 [[package]]

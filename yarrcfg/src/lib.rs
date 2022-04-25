@@ -20,7 +20,7 @@ pub struct Config {
 
 #[derive(Deserialize, Debug)]
 pub struct Matrix {
-    pub home_server: String,
+    pub user_id: String,
     pub access_token: SecString,
     pub room_id: String,
 }
@@ -105,7 +105,6 @@ pub fn parse_config() -> Result<Config> {
 
     let cfg: SecConfig =
         toml::from_str(&s).with_context(|| format!("couldn't parse {}", display))?;
-    debug!("SecConfig: {:?}", &cfg);
     // -- replace all secrets --
     let mut secrets: Vec<SecReplace> = vec![];
     let pass = if cfg.secrets.is_empty() {
@@ -173,6 +172,5 @@ pub fn parse_config() -> Result<Config> {
         debug!("Used secret {:?} {} times", &secret.name, secret.use_count)
     }
     let cfg: Config = toml::from_str(&s).with_context(|| format!("couldn't parse {}", display))?;
-    debug!("Config: {:?}", &cfg);
     Ok(cfg)
 }
