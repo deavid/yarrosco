@@ -2905,6 +2905,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "yarrosco"
+version = "0.1.0"
+
+[[package]]
 name = "yarrpass"
 version = "0.1.0"
 dependencies = [

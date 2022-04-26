@@ -29,3 +29,4 @@ might not be redistributable if there is a license conflict.
 
 * Currently, as of Arpil 25th 2022, all deps are compatible with Apache as long
 as original sources are not modified.
+
