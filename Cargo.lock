@@ -12,3 +12,7 @@ dependencies = [
 [[package]]
 name = "yarrlib"
 version = "0.1.0"
+
+[[package]]
+name = "yarrosco"
+version = "0.1.0"
