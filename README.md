@@ -21,12 +21,10 @@ This software is under heavy development and currently does not work.
 License
 --------
 
-Not licensed yet. It is planned to be released with an Apache License v2.
+Licensed under Apache License v2.
 
-TODO: Review licenses of all dependencies to ensure the result can be properly
-licensed Apache. The source itself might be apache, but the resulting build 
-might not be redistributable if there is a license conflict.
+NOTE: Only the files present in this folder are licensed under Apache License v2.
+  The dependencies of the different programs have their own licenses. 
+  The resulting binaries may or may not be licensable as Apache License v2.
 
-* Currently, as of Arpil 25th 2022, all deps are compatible with Apache as long
-as original sources are not modified.
 
