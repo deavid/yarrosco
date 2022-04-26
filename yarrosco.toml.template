@@ -8,6 +8,6 @@ oauth_token = '%%TWITCH_OAUTH_TOKEN%%'
 
 
 [matrix]
-home_server = "matrix.org"
+user_id = "@user:matrix.org"
 access_token = '%%MATRIX_ACCESS_TOKEN%%'
-room_id = "roomID:matrix.org"
+room_id = "!roomID:matrix.org"
