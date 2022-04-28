@@ -19,7 +19,7 @@ pub struct Message {
     pub message: String,
     pub username: String,
     pub msgid: String,
-    pub timestamp: String,
+    pub timestamp: u64,
 }
 
 pub struct ProviderQueue {

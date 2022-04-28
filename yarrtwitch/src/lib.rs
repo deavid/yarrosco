@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use anyhow::Result;
 use bus_queue::Subscriber;
 use futures::StreamExt;
@@ -133,14 +135,32 @@ impl TwitchClient {
         // .. Tag("subscriber", Some("0"))
         // .. Tag("badge-info", Some("")), Tag("badges", Some("broadcaster/1"))
         // .. Tag("emotes", Some("")) <--- samples?
+        let mut msgid = String::new();
+        let mut timestamp: u64 = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let mut username = username.clone();
+
+        if let Some(tags) = message.tags.as_ref() {
+            for tag in tags {
+                if let Some(value) = &tag.1 {
+                    match tag.0.as_str() {
+                        "id" => msgid = value.to_owned(),
+                        "tmi-sent-ts" => timestamp = value.parse().unwrap_or(timestamp),
+                        "display-name" => username = value.to_owned(),
+                        _ => {}
+                    }
+                }
+            }
+        }
         let e = Event::Message(Message {
             provider_name: self.queue.provider_name.clone(),
             room: target.to_owned(),
             message: text.to_owned(),
-            username: username.clone(),
-            // TODO:: fill these fields
-            msgid: "1234".to_owned(),
-            timestamp: "now".to_owned(),
+            username,
+            msgid,
+            timestamp,
         });
         self.queue.publish(e)?;
         Ok(())

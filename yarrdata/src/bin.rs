@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use anyhow::Result;
 use futures::executor::block_on;
 use futures::future::FutureExt;
@@ -15,7 +17,10 @@ fn main() -> Result<()> {
         message: "todo!()".to_owned(),
         username: "myself".to_owned(),
         msgid: "1234".to_owned(),
-        timestamp: "now".to_owned(),
+        timestamp: SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
     });
     p.publish(e.clone())?;
     p.publish(e.clone())?;

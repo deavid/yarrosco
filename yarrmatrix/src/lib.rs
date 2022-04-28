@@ -98,7 +98,7 @@ impl MatrixClient {
             debug!("Room {:?} >> Received a message {:?}", room.name(), ev);
             let msgid = ev.event_id.to_string();
             let username = ev.sender.localpart().to_owned();
-            let timestamp = format!("{}", ev.origin_server_ts.as_secs());
+            let timestamp: u64 = ev.origin_server_ts.as_secs().into();
             if let MessageType::Text(msg) = ev.content.msgtype {
                 self.queue
                     .publish(Event::Message(Message {
