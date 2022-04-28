@@ -77,6 +77,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08f9b8508dccb7687a1d6c4ce66b2b0ecef467c94667de27d8d7fe1f8d2a9cdc"
 
 [[package]]
+name = "arc-swap"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dabe5a181f83789739c194cbe5a897dde195078fac08568d09221fd6137a7ba8"
+
+[[package]]
 name = "assign"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -168,6 +174,17 @@ name = "bumpalo"
 version = "3.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4a45a46ab1f2412e53d3a0ade76ffad2025804294569aae387231a0cd6e0899"
+
+[[package]]
+name = "bus_queue"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e98e34ec054d0202019aa721ab322ef0bd018216233d0a4043526158123496d"
+dependencies = [
+ "arc-swap",
+ "futures-core",
+ "futures-sink",
+]
 
 [[package]]
 name = "bytemuck"
@@ -583,6 +600,19 @@ name = "fiat-crypto"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35354cf6bf9d259374646f419a25c7dd0bb208d291e44dc73db557542fe017fc"
+
+[[package]]
+name = "flume"
+version = "0.10.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "843c03199d0c0ca54bc1ea90ac0d507274c28abcc4f691ae8b4eaa375087c76a"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "nanorand",
+ "pin-project",
+ "spin",
+]
 
 [[package]]
 name = "fnv"
@@ -1353,6 +1383,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "nanorand"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a51313c5820b0b02bd422f4b44776fbf47961755c74ce64afc73bfad10226c3"
+dependencies = [
+ "getrandom 0.2.6",
 ]
 
 [[package]]
@@ -2321,6 +2360,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "spin"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c530c2b0d0bf8b69304b39fe2001993e267461948b890cd037d8ad4293fa1a0d"
+dependencies = [
+ "lock_api",
+]
+
+[[package]]
 name = "spki"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2891,22 +2939,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "yarrdata"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bus_queue",
+ "env_logger",
+ "futures",
+ "log",
+ "tokio",
+]
+
+[[package]]
 name = "yarrmatrix"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bus_queue",
+ "env_logger",
+ "flume",
+ "futures",
+ "log",
+ "matrix-sdk",
+ "ruma-identifiers",
+ "thiserror",
+ "tokio",
+ "yarrcfg",
+ "yarrdata",
+]
+
+[[package]]
+name = "yarrosco"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "env_logger",
  "futures",
  "log",
- "matrix-sdk",
- "ruma-identifiers",
  "tokio",
  "yarrcfg",
+ "yarrdata",
+ "yarrmatrix",
+ "yarrtwitch",
 ]
-
-[[package]]
-name = "yarrosco"
-version = "0.1.0"
 
 [[package]]
 name = "yarrpass"
@@ -2926,12 +3001,15 @@ name = "yarrtwitch"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bus_queue",
  "env_logger",
  "futures",
  "irc",
  "log",
+ "thiserror",
  "tokio",
  "yarrcfg",
+ "yarrdata",
 ]
 
 [[package]]

@@ -1,8 +1,8 @@
 use anyhow::{Ok, Result};
 use futures::prelude::*;
-use irc::client::prelude::*;
-use log::{debug, error, info, warn};
+use std::borrow::Borrow;
 use yarrcfg::parse_config;
+use yarrdata::Event;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -12,55 +12,20 @@ async fn main() -> Result<()> {
     env_logger::init();
 
     let cfg = parse_config()?;
-    let twitch = cfg.twitch.expect("Twitch config is needed to run IRC");
+    let twitch_cfg = cfg.twitch.expect("Twitch config is needed to run IRC");
+    let mut tw = yarrtwitch::TwitchClient::new(&twitch_cfg)?;
 
-    // We can also load the Config at runtime via Config::load("path/to/config.toml")
-    let config = Config {
-        nickname: Some(twitch.username.clone()),
-        server: Some(twitch.server()),
-        port: twitch.port()?,
-        channels: twitch.channels,
-        password: Some(format!("oauth:{}", &twitch.oauth_token.0)),
-        ..Config::default()
-    };
+    let mut twitch_sub = tw.subscribe();
+    let tw_future = tokio::task::spawn(async move { tw.run().await });
 
-    let mut client = Client::from_config(config).await?;
-    client.identify()?;
-    let extensions: Vec<Capability> = vec![Capability::Custom(":twitch.tv/tags")];
-    client.send_cap_req(&extensions)?;
-
-    let mut stream = client.stream()?;
-
-    while let Some(message) = stream.next().await.transpose()? {
-        // match message.prefix.unwrap() {
-        //     Prefix::ServerName(_) => todo!(),
-        //     Prefix::Nickname(_nick, _user, _host) => todo!(),
-        // }
-        match &message.command {
-            Command::PING(_, _) => {}
-            Command::PONG(_, _) => {}
-
-            Command::NOTICE(tgt, msg) => {
-                info!("NOTICE[{}]: {}", tgt, msg);
+    while let Some(ev) = twitch_sub.next().await {
+        // Upon receiving a new message...
+        match ev.borrow() {
+            Event::Message(m) => {
+                println!(">> {:?}>> {}", std::thread::current().id(), m.message)
             }
-            Command::Response(r, data) => match r.is_error() {
-                true => error!("E[{:?}] < {:?}", r, data),
-                false => {
-                    match r {
-                        Response::RPL_MOTD | Response::RPL_MOTDSTART => {}
-                        Response::RPL_ENDOFMOTD => info!("IRC Connection successful."),
-                        _ => debug!("< [{:?}] {:?}", r, data)
-                    };
-                }
-            },
-            Command::PRIVMSG(tgt, msg) => info!(
-                "P.Msg[{}]: {} (pfix: {:?} tags: {:?})",
-                tgt, msg, &message.prefix, &message.tags
-            ),
-            c => debug!(": {:?}", c),
         }
     }
-    // TODO: Sometimes, specially when connecting, it kills the connection before auth.
-    warn!("IRC Connection ended");
+    tw_future.await??;
     Ok(())
 }

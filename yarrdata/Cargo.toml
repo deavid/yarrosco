@@ -1,0 +1,22 @@
+[package]
+name = "yarrdata"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[lib]
+name = "yarrdata"
+path = "src/lib.rs"
+
+[[bin]]
+name = "yarrdata"
+path = "src/bin.rs"
+
+[dependencies]
+bus_queue = "0.5.3"
+anyhow = "1.0"
+log = "0.4"
+env_logger = "0.9"
+futures = "0.3"
+tokio = { version = "1.17", features = ["full"] }
+

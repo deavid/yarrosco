@@ -17,10 +17,13 @@ path = "src/bin.rs"
 
 [dependencies]
 yarrcfg = { path = "../yarrcfg" }
+yarrdata = { path = "../yarrdata" }
 irc = "0.15"
 tokio = { version = "1.17", features = ["full"] }
 futures = "0.3"
 anyhow = "1.0"
 env_logger = "0.9"
 log = "0.4"
+thiserror = "1.0.30"
+bus_queue = "0.5.3"
 # TODO: See Rust Twitch crates! https://crates.io/keywords/twitch

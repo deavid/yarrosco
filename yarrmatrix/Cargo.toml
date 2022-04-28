@@ -16,6 +16,7 @@ path = "src/bin.rs"
 
 [dependencies]
 yarrcfg = { path = "../yarrcfg" }
+yarrdata = { path = "../yarrdata" }
 # matrix-sdk = { version = "0.4", features = ["anyhow"] }
 matrix-sdk = { version = "0.4" }
 tokio = { version = "1.17", features = ["full"] }
@@ -23,5 +24,8 @@ futures = "0.3"
 anyhow = "1.0"
 env_logger = "0.9"
 log = "0.4"
+thiserror = "1.0.30"
+bus_queue = "0.5.3"
+flume = "0.10.12"
 # Ruma identifiers MUST match the one used in matrix-sdk
 ruma-identifiers = { version = "0.20", features = ["rand"] }
