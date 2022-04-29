@@ -45,6 +45,7 @@ async fn main() -> Result<()> {
     for (_, ce) in log.data.iter() {
         process_message(&ce.event);
     }
+    // TODO: Implement a yarrosco-secondary to have as a background + backup (name: yarrly? yarrdy? female-parrot)
 
     // Upon receiving a new matrix message...
     loop {
