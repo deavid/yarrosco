@@ -14,6 +14,8 @@ pub enum CfgError {
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
+    pub logfile: String,
+    pub checkpointfile: String,
     pub twitch: Option<Twitch>,
     pub matrix: Option<Matrix>,
 }

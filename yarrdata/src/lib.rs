@@ -1,24 +1,55 @@
 extern crate bus_queue;
-use std::pin::Pin;
-use std::sync::Arc;
-
+pub mod db;
 use anyhow::Result;
 use bus_queue::{bounded, Publisher, Subscriber};
 use futures::executor::block_on;
 use futures::{FutureExt, SinkExt, StreamExt};
+use serde::{Deserialize, Serialize};
+use std::pin::Pin;
+use std::sync::Arc;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Event {
     Message(Message),
 }
 
-#[derive(Debug, Clone)]
+impl Event {
+    pub fn from_json(text: &str) -> Result<Self> {
+        let m: Self = serde_json::from_str(text.trim())?;
+        Ok(m)
+    }
+    pub fn to_json(&self) -> Result<String> {
+        let mut s = serde_json::to_string(self)?;
+        s.push('\n');
+        Ok(s)
+    }
+}
+
+fn default_provider() -> String {
+    "no-provider".to_string()
+}
+
+fn default_timestamp() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let start = SystemTime::now();
+    let since_the_epoch = start.duration_since(UNIX_EPOCH).unwrap();
+    since_the_epoch.as_secs()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message {
+    // To add robustness when deserializing, we must have defaults for everything.
+    #[serde(default = "default_provider")]
     pub provider_name: String,
+    #[serde(default)]
     pub room: String,
+    #[serde(default)]
     pub message: String,
+    #[serde(default)]
     pub username: String,
+    #[serde(default)]
     pub msgid: String,
+    #[serde(default = "default_timestamp")]
     pub timestamp: u64,
 }
 

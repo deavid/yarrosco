@@ -1,3 +1,6 @@
+logfile = 'yarrdb_log.json'
+checkpointfile = 'yarrdb_data.json'
+
 [twitch]
 username = 'your_twitch_username'
 hostname = 'irc.chat.twitch.tv:6697'
