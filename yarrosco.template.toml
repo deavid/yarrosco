@@ -1,5 +1,5 @@
-logfile = 'yarrdb_log.json'
-checkpointfile = 'yarrdb_data.json'
+logfile = 'yarrdb_log.jsonl'
+checkpointfile = 'yarrdb_data.jsonl'
 
 [twitch]
 username = 'your_twitch_username'

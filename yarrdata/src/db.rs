@@ -10,6 +10,13 @@ use tokio::io::BufReader;
 use tokio::io::BufWriter;
 
 #[derive(Debug, Clone)]
+pub enum MessageIgnored {
+    None,
+    TooOld,
+    Duplicated,
+}
+
+#[derive(Debug, Clone)]
 pub struct CachedEvent {
     pub json: String,
     pub event: Event,
@@ -146,10 +153,8 @@ impl Log {
     async fn log(&mut self, json: String) -> Result<()> {
         let writer = self.get_writer().await?;
         writer.write_all(json.as_bytes()).await?;
-        // Depending on the consistency requirements, we can flush here or not.
-        // unless we want to be resilient to power outages and segfaults, this
-        // is not needed:
-        // writer.flush().await?;
+        // Seems flush is needed or on program stop wouldn't write.
+        writer.flush().await?;
         self.log_lines += 1;
         if self.log_lines > self.maxsize {
             self.perform_checkpoint().await?;
@@ -168,17 +173,23 @@ impl Log {
 
         Ok(())
     }
-    pub async fn push(&mut self, event: Event) -> Result<()> {
+    pub async fn push(&mut self, event: Event) -> Result<MessageIgnored> {
+        let key = EventId::from_event(&event);
+        if self.data.get(&key).is_some() {
+            return Ok(MessageIgnored::Duplicated);
+        }
         while self.data.len() >= self.maxsize {
             let first = self.data.iter().next().unwrap().0.clone();
+            if first.timestamp > event.timestamp() {
+                return Ok(MessageIgnored::TooOld);
+            }
             self.data.remove(&first);
         }
 
-        let key = EventId::from_event(&event);
         let ce = CachedEvent::from_event(event)?;
         self.log(ce.json.clone()).await?;
         self.data.insert(key, ce);
 
-        Ok(())
+        Ok(MessageIgnored::None)
     }
 }

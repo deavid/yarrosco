@@ -23,6 +23,11 @@ impl Event {
         s.push('\n');
         Ok(s)
     }
+    pub fn timestamp(&self) -> u64 {
+        match self {
+            Event::Message(m) => m.timestamp,
+        }
+    }
 }
 
 fn default_provider() -> String {

@@ -13,3 +13,7 @@ target/
 # Local config files (copied and customized from templates)
 yarrosco.toml
 yarrsecrets.toml
+
+# Local database
+yarrdb_data.jsonl
+yarrdb_log.jsonl

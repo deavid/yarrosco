@@ -147,7 +147,9 @@ impl TwitchClient {
                 if let Some(value) = &tag.1 {
                     match tag.0.as_str() {
                         "id" => msgid = value.to_owned(),
-                        "tmi-sent-ts" => timestamp = value.parse().unwrap_or(timestamp),
+                        "tmi-sent-ts" => {
+                            timestamp = value.parse().map_or(timestamp, |x: u64| x / 1000)
+                        }
                         "display-name" => username = value.to_owned(),
                         _ => {}
                     }
