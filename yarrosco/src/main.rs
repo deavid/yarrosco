@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
     let mut matrix_sub = mx.subscribe();
     let mx_future = task::spawn(async move { mx.run().await });
 
-    let mut log = db::Log::new(20, cfg.logfile, cfg.checkpointfile);
+    let mut log = db::Log::new(100, cfg.logfile, cfg.checkpointfile);
     if let Err(e) = log.load().await {
         error!("couldn't load the database: {:?}", e);
     }
