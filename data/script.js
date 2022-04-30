@@ -38,7 +38,6 @@ const reqListener = response => {
             let msg = obj.Message;
             if (msg) {
                 console.log(msg);
-                // TODO: Sometimes messages from matrix take time to appear... ??
                 key = `${msg.timestamp}|${msg.provider_name}|${msg.msgid}`
                 messages.set(key, msg);
             }
@@ -106,7 +105,12 @@ const loadData = () => {
 const loadLog = () => {
     const req = new XMLHttpRequest();
     req.onload = onLoadLog;
-    req.open("get", "yarrdb_log.jsonl", true);
+    // TODO: Sometimes messages take time to appear... ??
+    // .. ok, the problem is in the web server that it returns same E-Tag or modified dates.
+    // .. we probably need a proper way to send data from a web backend.
+    // .. this happens because the file is never closed until it checkpoints.
+    req.open("get", "yarrdb_log.jsonl?v=" + Math.random(), true);
+    // TODO: Also we froze firefox after a few hours of working. We need to debug this.
     req.send();
 };
 
@@ -114,4 +118,4 @@ window.onload = () => {
     loadData();
     loadLog();
 };
-window.setInterval(loadLog, 500);
+window.setInterval(loadLog, 50);
