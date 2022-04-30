@@ -6,7 +6,9 @@ use log::{debug, error, info, warn};
 use std::time::SystemTime;
 use std::vec;
 use thiserror::Error;
-use twitch_api2::helix::{self, chat::get_global_chat_badges};
+use twitch_api2::helix;
+use twitch_api2::helix::chat::get_channel_chat_badges;
+use twitch_api2::helix::chat::get_global_chat_badges;
 use twitch_api2::TwitchClient as ApiTwitchClient;
 use twitch_oauth2::tokens::UserToken;
 use twitch_oauth2::types::AccessToken;
@@ -54,8 +56,13 @@ impl TwitchClient {
     pub async fn get_badges(&self) -> Result<Vec<helix::chat::BadgeSet>> {
         let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
         let request = get_global_chat_badges::GetGlobalChatBadgesRequest::new();
-        let response: Vec<helix::chat::BadgeSet> =
+        let mut response: Vec<helix::chat::BadgeSet> =
             client.helix.req_get(request, &self.user_token).await?.data;
+        let request = get_channel_chat_badges::GetChannelChatBadgesRequest::builder()
+            .broadcaster_id("1234".to_string())
+            .build();
+        let mut channel_badges = client.helix.req_get(request, &self.user_token).await?.data;
+        response.append(&mut channel_badges);
         debug!("Badges: {:?}", response);
         Ok(response)
     }
