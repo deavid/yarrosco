@@ -1,13 +1,17 @@
-use std::time::SystemTime;
-
 use anyhow::Result;
 use bus_queue::Subscriber;
 use futures::StreamExt;
 use irc::client::prelude::*;
 use log::{debug, error, info, warn};
+use std::time::SystemTime;
+use std::vec;
 use thiserror::Error;
+use twitch_api2::helix::{self, chat::get_global_chat_badges};
+use twitch_api2::TwitchClient as ApiTwitchClient;
+use twitch_oauth2::tokens::UserToken;
+use twitch_oauth2::types::AccessToken;
 use yarrcfg::Twitch;
-use yarrdata::{Event, ProviderQueue, SyncSubscriber};
+use yarrdata::{Badge, Event, ProviderQueue, SyncSubscriber};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -17,14 +21,15 @@ pub enum Error {
 
 pub struct TwitchClient {
     config: irc::client::data::config::Config,
+    user_token: UserToken,
     extensions: Vec<Capability>,
-    // running: Mutex<()>,
     ready: bool,
     queue: ProviderQueue,
+    badges: Vec<helix::chat::BadgeSet>,
 }
 
 impl TwitchClient {
-    pub fn new(twitch_cfg: &Twitch) -> Result<Self> {
+    pub async fn new(twitch_cfg: &Twitch) -> Result<Self> {
         let config = Config {
             nickname: Some(twitch_cfg.username.clone()),
             server: Some(twitch_cfg.server()),
@@ -33,13 +38,53 @@ impl TwitchClient {
             password: Some(format!("oauth:{}", &twitch_cfg.oauth_token.0)),
             ..Config::default()
         };
+        let access_token = AccessToken::new(&twitch_cfg.oauth_token.0);
+        let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
+        let user_token =
+            UserToken::from_existing(&client, access_token.clone(), None, None).await?;
         Ok(Self {
             config,
+            user_token,
             extensions: vec![Capability::Custom(":twitch.tv/tags")],
             ready: false,
-            // running: Mutex::default(),
             queue: ProviderQueue::new("twitch".to_owned()),
+            badges: vec![],
         })
+    }
+    pub async fn get_badges(&self) -> Result<Vec<helix::chat::BadgeSet>> {
+        let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
+        let request = get_global_chat_badges::GetGlobalChatBadgesRequest::new();
+        let response: Vec<helix::chat::BadgeSet> =
+            client.helix.req_get(request, &self.user_token).await?.data;
+        debug!("Badges: {:?}", response);
+        Ok(response)
+    }
+    fn badges_from_str(&self, textbadges: &str) -> Vec<Badge> {
+        let nbadges = textbadges.split(',');
+        let mut badges: Vec<Badge> = vec![];
+        for nb in nbadges {
+            let mut nbs = nb.split('/');
+            let name = nbs.next().unwrap_or_default().to_string();
+            let vid = nbs.next().unwrap_or_default().to_string();
+            let mut url = String::new();
+            // TODO: Iterating across all badges might be slow - do we need a hashMap? (consider that for less than 100, iterate is faster)
+            for tb in self.badges.iter() {
+                if name == tb.set_id.as_str() {
+                    for ver in tb.versions.iter() {
+                        if ver.id.as_str() == vid {
+                            url = ver.image_url_2x.to_owned();
+                        }
+                    }
+                }
+            }
+            if !url.is_empty() {
+                let b = Badge { name, vid, url };
+                badges.push(b);
+            } else {
+                warn!("unable to find badge for {:?}", nb);
+            }
+        }
+        badges
     }
     pub fn subscribe(&self) -> Subscriber<Event> {
         self.queue.subscribe()
@@ -57,8 +102,14 @@ impl TwitchClient {
         Ok(())
     }
     async fn run_once(&mut self) -> Result<()> {
-        // let _running = self.running.try_lock().map_err(|_| Error::AlreadyRunning)?;
         self.ready = false;
+        if self.badges.is_empty() {
+            let badges = self.get_badges().await;
+            match badges {
+                Ok(badges) => self.badges = badges,
+                Err(e) => error!("trying to download badges: {:?}", e),
+            }
+        }
         let mut client = Client::from_config(self.config.clone()).await?;
         client.identify()?;
         client.send_cap_req(&self.extensions)?;
@@ -142,6 +193,7 @@ impl TwitchClient {
             .as_secs();
         let mut username = username.clone();
 
+        let mut badges: Vec<Badge> = vec![];
         if let Some(tags) = message.tags.as_ref() {
             for tag in tags {
                 if let Some(value) = &tag.1 {
@@ -151,11 +203,13 @@ impl TwitchClient {
                             timestamp = value.parse().map_or(timestamp, |x: u64| x / 1000)
                         }
                         "display-name" => username = value.to_owned(),
+                        "badges" => badges = self.badges_from_str(value.as_str()),
                         _ => {}
                     }
                 }
             }
         }
+
         let e = Event::Message(Message {
             provider_name: self.queue.provider_name.clone(),
             room: target.to_owned(),
@@ -163,6 +217,7 @@ impl TwitchClient {
             username,
             msgid,
             timestamp,
+            badges,
         });
         self.queue.publish(e)?;
         Ok(())

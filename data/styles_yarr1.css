@@ -17,6 +17,18 @@ body {
     padding: 2px;
 }
 
+.badges {
+    display: inline-block;
+    margin-right: 2px;
+}
+
+.badge {
+    max-width: 28px;
+    max-height: 28px;
+    margin-right: 1px;
+    margin-bottom: -6px;
+}
+
 .provider {
     display: inline-block;
     margin-left: 0;

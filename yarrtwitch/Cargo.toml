@@ -26,4 +26,6 @@ env_logger = "0.9"
 log = "0.4"
 thiserror = "1.0.30"
 bus_queue = "0.5.3"
-# TODO: See Rust Twitch crates! https://crates.io/keywords/twitch
+twitch_oauth2 = "0.6.1"
+twitch_api2 = { version = "0.6.1", features = ["twitch_oauth2","client", "helix", "reqwest", "trace_unknown_fields"]}
+reqwest = "0.11.10"

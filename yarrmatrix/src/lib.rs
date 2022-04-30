@@ -108,6 +108,7 @@ impl MatrixClient {
                         username,
                         msgid,
                         timestamp,
+                        ..Default::default()
                     }))
                     .with_context(|| {
                         format!("trying to publish to the queue the message {:?}", msg.body)

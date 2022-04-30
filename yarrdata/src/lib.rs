@@ -41,7 +41,7 @@ fn default_timestamp() -> u64 {
     since_the_epoch.as_secs()
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Message {
     // To add robustness when deserializing, we must have defaults for everything.
     #[serde(default = "default_provider")]
@@ -56,6 +56,17 @@ pub struct Message {
     pub msgid: String,
     #[serde(default = "default_timestamp")]
     pub timestamp: u64,
+    #[serde(default)]
+    pub badges: Vec<Badge>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Badge {
+    // broadcaster/1 -> name: broadcaster, vid: 1
+    pub name: String,
+    pub vid: String,
+
+    pub url: String,
 }
 
 pub struct ProviderQueue {

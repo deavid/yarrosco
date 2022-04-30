@@ -1,4 +1,5 @@
 "use strict";
+// PLEASE UPDATE THE TYPESCRIPT FILE. script.js is automatically updated when running "tsc" on this folder.
 class Message {
     constructor(msg) {
         this.provider_name = msg.provider_name;
@@ -7,6 +8,11 @@ class Message {
         this.message = msg.message;
         this.msgid = msg.msgid;
         this.timestamp = msg.timestamp;
+        this.badges = new Array();
+        for (let b in msg.badges) {
+            let badge = new Badge(msg.badges[b]);
+            this.badges.push(badge);
+        }
     }
     provider_tag() {
         switch (this.provider_name) {
@@ -17,6 +23,13 @@ class Message {
     }
     key() {
         return `${this.timestamp}|${this.provider_name}|${this.msgid}`;
+    }
+}
+class Badge {
+    constructor(badge) {
+        this.name = badge.name;
+        this.vid = badge.vid;
+        this.url = badge.url;
     }
 }
 var messages = new Map();
@@ -103,11 +116,16 @@ const updateChat = () => {
         if (msg.timestamp < first_timestamp) {
             continue;
         }
+        let badges = "";
+        for (let i in msg.badges) {
+            let badge = msg.badges[i];
+            badges += `<img src="${badge.url}" alt="${badge.name}" class="badge">`;
+        }
         let color = stringToColour(msg.username);
         let text = `
         <div class="shadow chatmsg chatmsg-${msg.provider_name}">
             <div class="provider provider-${msg.provider_name}">${msg.provider_tag()}@
-            </div><div class="username" style="color: ${color}">${msg.username}
+            </div><div class="badges badges-${msg.provider_name}">${badges}</div><div class="username" style="color: ${color}">${msg.username}
             </div><span class="separator">:</span><div class="message">${escapeHtml(msg.message)}</div>
         </div>
         `;

@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
     // TODO: remove the expect, twitch is not mandatory really.
     let twitch_cfg = cfg.twitch.expect("Twitch config is needed");
 
-    let mut tw = TwitchClient::new(&twitch_cfg)?;
+    let mut tw = TwitchClient::new(&twitch_cfg).await?;
     // Subscribe to twitch
     let mut twitch_sub = tw.subscribe();
     let tw_future = task::spawn(async move { tw.run().await });

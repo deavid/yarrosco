@@ -21,6 +21,7 @@ fn main() -> Result<()> {
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs(),
+        ..Default::default()
     });
     p.publish(e.clone())?;
     p.publish(e.clone())?;
