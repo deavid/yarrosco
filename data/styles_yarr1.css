@@ -10,7 +10,6 @@ body {
     padding-bottom: 0.25em;
     padding-left: 8px;
     margin-left: 0px;
-    line-height: 22px;
 }
 
 .spacing {
@@ -22,10 +21,23 @@ body {
     margin-right: 2px;
 }
 
+.badge,
+.emote {
+    filter: drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000);
+}
+
 .badge {
     max-width: 28px;
     max-height: 28px;
     margin-right: 1px;
+    margin-bottom: -6px;
+}
+
+.emote {
+    max-width: 40px;
+    max-height: 40px;
+    margin-right: 1px;
+    margin-left: 2px;
     margin-bottom: -6px;
 }
 
@@ -44,4 +56,5 @@ body {
 .message {
     display: inline;
     margin-left: 4px;
+    line-height: 1.5;
 }

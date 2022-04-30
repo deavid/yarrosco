@@ -58,14 +58,33 @@ pub struct Message {
     pub timestamp: u64,
     #[serde(default)]
     pub badges: Vec<Badge>,
+    #[serde(default)]
+    pub emotes: Vec<Emote>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Badge {
     // broadcaster/1 -> name: broadcaster, vid: 1
+    #[serde(default)]
     pub name: String,
+    #[serde(default)]
     pub vid: String,
 
+    #[serde(default)]
+    pub url: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Emote {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub from: usize,
+    #[serde(default)]
+    pub to: usize,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
     pub url: String,
 }
 

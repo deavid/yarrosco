@@ -3,12 +3,15 @@ use bus_queue::Subscriber;
 use futures::StreamExt;
 use irc::client::prelude::*;
 use log::{debug, error, info, warn};
+use std::collections::HashMap;
 use std::time::SystemTime;
 use std::vec;
 use thiserror::Error;
 use twitch_api2::helix;
 use twitch_api2::helix::chat::get_channel_chat_badges;
+use twitch_api2::helix::chat::get_channel_emotes;
 use twitch_api2::helix::chat::get_global_chat_badges;
+use twitch_api2::helix::chat::get_global_emotes;
 use twitch_api2::TwitchClient as ApiTwitchClient;
 use twitch_oauth2::tokens::UserToken;
 use twitch_oauth2::types::AccessToken;
@@ -21,6 +24,29 @@ pub enum Error {
     AlreadyRunning,
 }
 
+pub struct Emote {
+    pub id: String,
+    pub name: String,
+    pub image: String,
+}
+
+impl Emote {
+    pub fn from_global(emote: &helix::chat::GlobalEmote) -> Self {
+        Self {
+            id: emote.id.to_string(),
+            name: emote.name.clone(),
+            image: emote.images.url_2x.clone(),
+        }
+    }
+    pub fn from_channel(emote: &helix::chat::ChannelEmote) -> Self {
+        Self {
+            id: emote.id.to_string(),
+            name: emote.name.clone(),
+            image: emote.images.url_2x.clone(),
+        }
+    }
+}
+
 pub struct TwitchClient {
     config: irc::client::data::config::Config,
     user_token: UserToken,
@@ -28,6 +54,7 @@ pub struct TwitchClient {
     ready: bool,
     queue: ProviderQueue,
     badges: Vec<helix::chat::BadgeSet>,
+    emotes: HashMap<String, Emote>,
 }
 
 impl TwitchClient {
@@ -44,6 +71,7 @@ impl TwitchClient {
         let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
         let user_token =
             UserToken::from_existing(&client, access_token.clone(), None, None).await?;
+
         Ok(Self {
             config,
             user_token,
@@ -51,15 +79,89 @@ impl TwitchClient {
             ready: false,
             queue: ProviderQueue::new("twitch".to_owned()),
             badges: vec![],
+            emotes: HashMap::new(),
         })
     }
+    pub async fn get_global_emotes(&self) -> Result<Vec<helix::chat::GlobalEmote>> {
+        let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
+        let request = get_global_emotes::GetGlobalEmotesRequest::default();
+        let global_emotes: Vec<helix::chat::GlobalEmote> =
+            client.helix.req_get(request, &self.user_token).await?.data;
+        debug!("Global Emotes: {:?}", global_emotes);
+        Ok(global_emotes)
+    }
+    pub async fn get_channel_emotes(&self) -> Result<Vec<helix::chat::ChannelEmote>> {
+        let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
+        let request = get_channel_emotes::GetChannelEmotesRequest::builder()
+            .broadcaster_id(self.user_token.user_id.to_string())
+            .build();
+        let channel_emotes: Vec<helix::chat::ChannelEmote> =
+            client.helix.req_get(request, &self.user_token).await?.data;
+        debug!("Channel Emotes: {:?}", channel_emotes);
+        Ok(channel_emotes)
+    }
+    pub async fn load_emotes(&mut self) {
+        let ch_emotes = match self.get_channel_emotes().await {
+            Ok(x) => x,
+            Err(e) => {
+                error!("load_emotes: error loading channel emotes: {:?}", e);
+                vec![]
+            }
+        };
+        let gl_emotes = match self.get_global_emotes().await {
+            Ok(x) => x,
+            Err(e) => {
+                error!("load_emotes: error loading global emotes: {:?}", e);
+                vec![]
+            }
+        };
+        for emote in ch_emotes {
+            let emote = Emote::from_channel(&emote);
+            self.emotes.insert(emote.id.clone(), emote);
+        }
+        for emote in gl_emotes {
+            let emote = Emote::from_global(&emote);
+            self.emotes.insert(emote.id.clone(), emote);
+        }
+    }
+    fn emotes_from_str(&self, textemotes: &str) -> Vec<yarrdata::Emote> {
+        // .. Tag("emotes", Some("864205:17-24/444572:0-7/724216:9-15"))
+        let mut emotes: Vec<yarrdata::Emote> = vec![];
+        for nb in textemotes.split('/') {
+            if nb.is_empty() {
+                continue;
+            }
+            let mut nbs = nb.split(':');
+            let id = nbs.next().unwrap_or_default().to_string();
+            let rangetxt = nbs.next().unwrap_or_default().to_string();
+            let mut range = rangetxt.split('-');
+            let from: usize = range.next().unwrap_or_default().parse().unwrap_or_default();
+            let to: usize = range.next().unwrap_or_default().parse().unwrap_or_default();
+
+            match self.emotes.get(&id) {
+                Some(dbemote) => {
+                    let e = yarrdata::Emote {
+                        id,
+                        from,
+                        to,
+                        name: dbemote.name.to_owned(),
+                        url: dbemote.image.to_owned(),
+                    };
+                    emotes.push(e);
+                }
+                None => warn!("failed to find emote {:?}", id),
+            }
+        }
+        emotes
+    }
+
     pub async fn get_badges(&self) -> Result<Vec<helix::chat::BadgeSet>> {
         let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
         let request = get_global_chat_badges::GetGlobalChatBadgesRequest::new();
         let mut response: Vec<helix::chat::BadgeSet> =
             client.helix.req_get(request, &self.user_token).await?.data;
         let request = get_channel_chat_badges::GetChannelChatBadgesRequest::builder()
-            .broadcaster_id("1234".to_string())
+            .broadcaster_id(self.user_token.user_id.to_string())
             .build();
         let mut channel_badges = client.helix.req_get(request, &self.user_token).await?.data;
         response.append(&mut channel_badges);
@@ -70,6 +172,9 @@ impl TwitchClient {
         let nbadges = textbadges.split(',');
         let mut badges: Vec<Badge> = vec![];
         for nb in nbadges {
+            if nb.is_empty() {
+                continue;
+            }
             let mut nbs = nb.split('/');
             let name = nbs.next().unwrap_or_default().to_string();
             let vid = nbs.next().unwrap_or_default().to_string();
@@ -116,6 +221,9 @@ impl TwitchClient {
                 Ok(badges) => self.badges = badges,
                 Err(e) => error!("trying to download badges: {:?}", e),
             }
+        }
+        if self.emotes.is_empty() {
+            self.load_emotes().await;
         }
         let mut client = Client::from_config(self.config.clone()).await?;
         client.identify()?;
@@ -187,12 +295,7 @@ impl TwitchClient {
             message.tags,
             std::thread::current().id(),
         );
-        // TODO: Tag("id", Some("65a27446-8c5c-4a5a-9f18-c759824d1e69"))
-        // TODO: Tag("tmi-sent-ts", Some("1651155343269"))
-        // .. Tag("display-name", Some("UserName"))
         // .. Tag("subscriber", Some("0"))
-        // .. Tag("badge-info", Some("")), Tag("badges", Some("broadcaster/1"))
-        // .. Tag("emotes", Some("")) <--- samples?
         let mut msgid = String::new();
         let mut timestamp: u64 = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -201,6 +304,7 @@ impl TwitchClient {
         let mut username = username.clone();
 
         let mut badges: Vec<Badge> = vec![];
+        let mut emotes: Vec<yarrdata::Emote> = vec![];
         if let Some(tags) = message.tags.as_ref() {
             for tag in tags {
                 if let Some(value) = &tag.1 {
@@ -211,6 +315,7 @@ impl TwitchClient {
                         }
                         "display-name" => username = value.to_owned(),
                         "badges" => badges = self.badges_from_str(value.as_str()),
+                        "emotes" => emotes = self.emotes_from_str(value.as_str()),
                         _ => {}
                     }
                 }
@@ -225,6 +330,7 @@ impl TwitchClient {
             msgid,
             timestamp,
             badges,
+            emotes,
         });
         self.queue.publish(e)?;
         Ok(())

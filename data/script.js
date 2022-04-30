@@ -13,6 +13,11 @@ class Message {
             let badge = new Badge(msg.badges[b]);
             this.badges.push(badge);
         }
+        this.emotes = new Array();
+        for (let e in msg.emotes) {
+            let emote = new Emote(msg.emotes[e]);
+            this.emotes.push(emote);
+        }
     }
     provider_tag() {
         switch (this.provider_name) {
@@ -30,6 +35,15 @@ class Badge {
         this.name = badge.name;
         this.vid = badge.vid;
         this.url = badge.url;
+    }
+}
+class Emote {
+    constructor(emote) {
+        this.id = emote.id;
+        this.from = emote.from;
+        this.to = emote.to;
+        this.name = emote.name;
+        this.url = emote.url;
     }
 }
 var messages = new Map();
@@ -121,12 +135,19 @@ const updateChat = () => {
             let badge = msg.badges[i];
             badges += `<img src="${badge.url}" alt="${badge.name}" class="badge">`;
         }
+        let message = escapeHtml(msg.message);
+        for (let i in msg.emotes) {
+            // TODO: This code does not cut the emotes as specified and may result in undefined behavior.
+            let emote = msg.emotes[i];
+            let img = `<img src="${emote.url}" alt="${emote.name}" class="emote">`;
+            message = message.replaceAll(emote.name, img);
+        }
         let color = stringToColour(msg.username);
         let text = `
         <div class="shadow chatmsg chatmsg-${msg.provider_name}">
             <div class="provider provider-${msg.provider_name}">${msg.provider_tag()}@
             </div><div class="badges badges-${msg.provider_name}">${badges}</div><div class="username" style="color: ${color}">${msg.username}
-            </div><span class="separator">:</span><div class="message">${escapeHtml(msg.message)}</div>
+            </div><span class="separator">:</span><div class="message">${message}</div>
         </div>
         `;
         let spacing = (msg.timestamp - last_timestamp) * chat_speed;
