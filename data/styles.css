@@ -134,13 +134,78 @@ table {
 body {
     background-color: #020;
     color: #fff;
-    font-family: sans-serif;
+    font-family: "Noto sans", sans-serif;
 }
 
-.messages {
-    margin: 14px;
+#content {
+    margin: 8px;
     left: 0;
     bottom: 0;
     position: absolute;
     overflow: hidden;
+}
+
+.shadow {
+    text-shadow: 1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000,
+        0px 1px 0 #000,
+        0px -1px 0 #000,
+        -1px 0px 0 #000,
+        1px 0px 0 #000,
+        2px 2px 0 #000,
+        -2px 2px 0 #000,
+        2px -2px 0 #000,
+        -2px -2px 0 #000,
+        0px 2px 0 #000,
+        0px -2px 0 #000,
+        -2px 0px 0 #000,
+        2px 0px 0 #000,
+        1px 2px 0 #000,
+        -1px 2px 0 #000,
+        1px -2px 0 #000,
+        -1px -2px 0 #000,
+        2px 1px 0 #000,
+        -2px 1px 0 #000,
+        2px -1px 0 #000,
+        -2px -1px 0 #000
+}
+
+.chatmsg {
+    border-left: 3px #fff solid;
+    margin-bottom: 0.7em;
+    padding-left: 2px;
+}
+
+.chatmsg-twitch {
+    border-color: #6441A4;
+}
+
+.provider-twitch {
+    color: #6441A4;
+}
+
+.chatmsg-matrix {
+    border-color: #0dbd8b;
+}
+
+.provider-matrix {
+    color: #0dbd8b;
+}
+
+.provider {
+    display: inline-block;
+    margin-left: 4px;
+}
+
+.username {
+    font-weight: 600;
+    display: inline-block;
+    margin-left: 4px;
+}
+
+.message {
+    display: inline-block;
+    margin-left: 4px;
 }

@@ -38,6 +38,7 @@ const reqListener = response => {
             let msg = obj.Message;
             if (msg) {
                 console.log(msg);
+                // TODO: Sometimes messages from matrix take time to appear... ??
                 key = `${msg.timestamp}|${msg.provider_name}|${msg.msgid}`
                 messages.set(key, msg);
             }
@@ -53,6 +54,18 @@ const reqListener = response => {
     updateChat();
     return lines.length;
 };
+const escapeHtml = (unsafe) => {
+    return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
+var stringToColour = function (str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    hue = hash % 360;
+    return `hsl(${hue}, 80%, 70%)`;
+}
 
 const updateChat = () => {
     let chatHTML = "";
@@ -61,19 +74,26 @@ const updateChat = () => {
     for (i in keys) {
         let k = keys[i];
         let msg = messages.get(k);
+        let color = stringToColour(msg.username);
         // msg.provider_name
         // msg.room
         // msg.message
         // msg.username
         // msg.timestamp
-        let text = `#${msg.provider_name}::${msg.username}> ${msg.message}\n`;
+        let text = `
+        <div class="shadow chatmsg chatmsg-${msg.provider_name}">
+            <div class="provider provider-${msg.provider_name}">${msg.provider_name}
+            </div><div class="username" style="color: ${color}">${msg.username}
+            </div><span class="separator">:</span><div class="message">${escapeHtml(msg.message)}</div>
+        </div>
+        `;
 
         chatHTML += text;
 
     }
 
     const content = document.getElementById("content");
-    content.innerText = chatHTML;
+    content.innerHTML = chatHTML;
 
 };
 
