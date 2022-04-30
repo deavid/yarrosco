@@ -1,0 +1,35 @@
+/* main styles */
+body {
+    font-family: "Noto sans", sans-serif;
+}
+
+.chatmsg {
+    border-left-width: 6px;
+    border-left-style: solid;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    padding-left: 8px;
+    margin-left: 0px;
+    line-height: 22px;
+}
+
+.spacing {
+    padding: 2px;
+}
+
+.provider {
+    display: inline-block;
+    margin-left: 0;
+    padding-right: 0.25em;
+}
+
+.username {
+    font-weight: 600;
+    display: inline-block;
+    margin-left: 0;
+}
+
+.message {
+    display: inline;
+    margin-left: 4px;
+}

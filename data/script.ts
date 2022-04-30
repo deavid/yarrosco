@@ -1,6 +1,13 @@
-"use strict";
+
 class Message {
-    constructor(msg) {
+    provider_name: string
+    room: string
+    username: string
+    message: string
+    msgid: string
+    timestamp: number
+
+    constructor(msg: any) {
         this.provider_name = msg.provider_name;
         this.room = msg.room;
         this.username = msg.username;
@@ -8,21 +15,24 @@ class Message {
         this.msgid = msg.msgid;
         this.timestamp = msg.timestamp;
     }
-    provider_tag() {
+    provider_tag(): string {
         switch (this.provider_name) {
-            case "twitch": return "Tw";
-            case "matrix": return "Mx";
+            case "twitch": return "Tw"
+            case "matrix": return "Mx"
         }
         return this.provider_name;
     }
     key() {
-        return `${this.timestamp}|${this.provider_name}|${this.msgid}`;
+        return `${this.timestamp}|${this.provider_name}|${this.msgid}`
     }
+
 }
-var messages = new Map();
-var last_hash = "";
+
+var messages: Map<string, Message> = new Map();
+var last_hash: string = "";
 var last_linecount = 0;
-const simpleHash = (str) => {
+
+const simpleHash = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
@@ -31,17 +41,18 @@ const simpleHash = (str) => {
     }
     return new Uint32Array([hash])[0].toString(36);
 };
-const onLoadData = (xhr) => {
+const onLoadData = (xhr: XMLHttpRequest) => {
     reqListener(xhr);
-};
-const onLoadLog = (xhr) => {
+}
+const onLoadLog = (xhr: XMLHttpRequest) => {
     let lines = reqListener(xhr);
     if (lines < last_linecount) {
         loadData();
     }
     last_linecount = lines;
-};
-const reqListener = (xhr) => {
+}
+
+const reqListener = (xhr: XMLHttpRequest): number => {
     let resp = xhr.responseText;
     let h = simpleHash(resp);
     if (h == last_hash) {
@@ -73,17 +84,19 @@ const reqListener = (xhr) => {
     updateChat();
     return lines.length;
 };
-const escapeHtml = (unsafe) => {
+const escapeHtml = (unsafe: string) => {
     return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-};
-var stringToColour = function (str) {
+}
+
+var stringToColour = function (str: string) {
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
     let hue = hash % 360;
     return `hsl(${hue}, 80%, 70%)`;
-};
+}
+
 const updateChat = () => {
     let chatHTML = "";
     let keys = [...messages.keys()].sort();
@@ -97,7 +110,7 @@ const updateChat = () => {
         let k = keys[i];
         let msg = messages.get(k);
         if (!msg) {
-            console.log(`missing data for key-${i} ${k}`);
+            console.log(`missing data for key-${i} ${k}`)
             continue;
         }
         if (msg.timestamp < first_timestamp) {
@@ -116,25 +129,29 @@ const updateChat = () => {
             let prefix = `<div class="spacing"></div>`;
             text = prefix + text;
         }
+
         chatHTML += text;
         last_timestamp = msg.timestamp;
+
     }
     let spacing = (timestamp - last_timestamp) * chat_speed;
     for (let i = 0; i < spacing && i < 10; i++) {
         let prefix = `<div class="spacing"></div>`;
         chatHTML += prefix;
     }
+
     const content = document.getElementById("content");
     if (content) {
         content.innerHTML = chatHTML;
+    } else {
+        console.log("unable to find #content")
     }
-    else {
-        console.log("unable to find #content");
-    }
+
 };
+
 const loadData = () => {
     const req = new XMLHttpRequest();
-    req.onload = (response) => {
+    req.onload = (response: ProgressEvent<EventTarget>) => {
         onLoadData(req);
     };
     req.open("get", "yarrdb_data.jsonl", true);
@@ -142,10 +159,9 @@ const loadData = () => {
 };
 const loadLog = () => {
     const req = new XMLHttpRequest();
-    req.onload = (response) => {
+    req.onload = (response: ProgressEvent<EventTarget>) => {
         onLoadLog(req);
-    };
-    ;
+    };;
     // TODO: Sometimes messages take time to appear... ??
     // .. ok, the problem is in the web server that it returns same E-Tag or modified dates.
     // .. we probably need a proper way to send data from a web backend.
@@ -154,6 +170,7 @@ const loadLog = () => {
     // TODO: Also we froze firefox after a few hours of working. We need to debug this.
     req.send();
 };
+
 window.onload = () => {
     loadData();
     loadLog();
