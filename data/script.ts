@@ -234,5 +234,5 @@ window.onload = () => {
     loadData();
     loadLog();
 };
-window.setInterval(loadLog, 50);
+window.setInterval(loadLog, 250);
 window.setInterval(updateChat, 2 * 1000);
