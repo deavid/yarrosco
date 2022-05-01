@@ -227,6 +227,8 @@ const loadLog = () => {
     // .. this happens because the file is never closed until it checkpoints.
     req.open("get", "yarrdb_log.jsonl?v=" + Math.random(), true);
     // TODO: Also we froze firefox after a few hours of working. We need to debug this.
+    // .. this seems because we keep updating the HTML in the background and Firefox delays
+    // .. these until it wakes up. Or JS itself might be stopped.
     req.send();
 };
 
