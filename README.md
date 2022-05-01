@@ -27,6 +27,27 @@ Outputs to OBS via Browser. OBS Browser plugin is not tested with Yarrosco.
 The only tested method is having a local web server running, run Firefox ESR to
 the page, and capture the window within OBS.
 
+Features
+--------
+
+* 99% Rust with some minor HTML + Typescript.
+* Async and Threaded using Tokio. 
+  (Caveat: still pending refactor, some operations might block)
+* Twitch support:
+  * Emotes.
+  * Badges.
+  * Resiliency against IRC disconnection.
+* Matrix support:
+  * History retrieval.
+* Database storage prevents losing history of chats when restarting Yarrosco.
+* Small HTML Application provided to display messages in OBS.
+* Configurable logging verbosity (error, warn, info, debug).
+* Ofuscable secrets (passwords, oauth tokens, etc) - useful to stream while 
+  developing Yarrosco without leaking private information.
+
+For an overview of the folders and how the code is organized, please see 
+[README_contents.md](./README_contents.md)
+
 Binary releases
 ---------------
 
