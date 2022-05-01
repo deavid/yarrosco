@@ -68,6 +68,7 @@ class Emote {
 var messages: Map<string, Message> = new Map();
 var last_hash: string = "";
 var last_linecount = 0;
+var last_html = "";
 
 const simpleHash = (str: string) => {
     let hash = 0;
@@ -111,7 +112,7 @@ const reqListener = (xhr: XMLHttpRequest): number => {
             }
         }
     }
-    let toDelete = messages.size - 100;
+    let toDelete = messages.size - 50;
     if (toDelete > 0) {
         let keys = [...messages.keys()].sort().slice(0, toDelete);
         for (let i in keys) {
@@ -174,9 +175,12 @@ const updateChat = () => {
         </div>
         `;
         let spacing = (msg.timestamp - last_timestamp) * chat_speed;
+        let preftext = "";
         for (let i = 0; i < spacing && i < 10; i++) {
-            let prefix = `<div class="spacing"></div>`;
-            text = prefix + text;
+            preftext += `<div class="spacing"></div>`;
+        }
+        if (preftext != "") {
+            text = `<div class="spacing_group">${preftext}</div>` + text;
         }
 
         chatHTML += text;
@@ -184,17 +188,23 @@ const updateChat = () => {
 
     }
     let spacing = (timestamp - last_timestamp) * chat_speed;
+    let preftext = "";
     for (let i = 0; i < spacing && i < 10; i++) {
-        let prefix = `<div class="spacing"></div>`;
-        chatHTML += prefix;
+        preftext += `<div class="spacing"></div>`;
     }
-
+    if (preftext != "") {
+        chatHTML += `<div class="spacing_group">${preftext}</div>`;
+    }
+    if (last_html == chatHTML) {
+        return;
+    }
     const content = document.getElementById("content");
     if (content) {
         content.innerHTML = chatHTML;
     } else {
         console.log("unable to find #content")
     }
+    last_html = chatHTML;
 
 };
 
