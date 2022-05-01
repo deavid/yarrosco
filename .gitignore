@@ -17,3 +17,8 @@ yarrsecrets.toml
 # Local database
 yarrdb_data.jsonl
 yarrdb_log.jsonl
+
+# Others...
+
+currentlyplaying.txt
+.currentlyplaying.txt
