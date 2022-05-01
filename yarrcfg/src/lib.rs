@@ -119,6 +119,9 @@ pub fn parse_config() -> Result<Config> {
         let name = name.clone();
         let v = v.clone();
         let pass = pass.clone();
+        if v.version != 1 {
+            warn!("Unsupported secret version <{}>", v.version);
+        }
         let handle = thread::spawn(move || -> Result<SecReplace> {
             let sac = SaltAndCipher::deserialize(&v.secret.0).with_context(|| {
                 format!(

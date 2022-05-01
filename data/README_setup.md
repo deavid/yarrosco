@@ -1,7 +1,7 @@
 Configuring the HTML App
 =========================
 
-This folder contains an HTML application using a single Typescript file that 
+This folder contains an HTML application using Typescript that 
 will query using AJAX the files `yarrdb_data.jsonl` and `yarrdb_log.jsonl`.
 
 The result will be parsed and held in an in-memory database, then the chat is
@@ -34,6 +34,7 @@ rendered from this memory database.
 3. Create a folder called "yarrosco": `~/www/yarrosco/`
 
 4. Link the following files to `~/www/yarrosco/`:
+    * data/config.js
     * data/script.js
     * data/styles_base.css
     * data/styles_yarr1.css
@@ -98,3 +99,7 @@ After the change, just execute:
     $ sudo /etc/init.d/nginx restart
 
 And now go to http://localhost and test your changes.
+
+## Customizing
+
+If you want to customize it, have a look to [README_customize.md](./README_customize.md)

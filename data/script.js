@@ -1,5 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 // PLEASE UPDATE THE TYPESCRIPT FILE. script.js is automatically updated when running "tsc" on this folder.
+const config_1 = __importDefault(require("./config"));
 class Message {
     constructor(msg) {
         this.provider_name = msg.provider_name;
@@ -20,9 +25,9 @@ class Message {
         }
     }
     provider_tag() {
-        switch (this.provider_name) {
-            case "twitch": return "Tw";
-            case "matrix": return "Mx";
+        let tag = config_1.default.PROVIDER_TAG_MAP.get(this.provider_name);
+        if (tag) {
+            return tag;
         }
         return this.provider_name;
     }
@@ -50,6 +55,8 @@ var messages = new Map();
 var last_hash = "";
 var last_linecount = 0;
 var last_html = "";
+var last_update_time = 0;
+var last_load_time = 0;
 const simpleHash = (str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -63,6 +70,12 @@ const onLoadData = (xhr) => {
     reqListener(xhr);
 };
 const onLoadLog = (xhr) => {
+    const timestamp_ms = Date.now();
+    if (timestamp_ms - last_load_time < config_1.default.DB_POLL_RATE_MS / 2) {
+        // Prevent the browser from hibernating all the calls and sending them all at once when it wakes up.
+        return;
+    }
+    last_load_time = timestamp_ms;
     let lines = reqListener(xhr);
     if (lines < last_linecount) {
         loadData();
@@ -91,7 +104,7 @@ const reqListener = (xhr) => {
             }
         }
     }
-    let toDelete = messages.size - 50;
+    let toDelete = messages.size - config_1.default.MAX_MESSAGES;
     if (toDelete > 0) {
         let keys = [...messages.keys()].sort().slice(0, toDelete);
         for (let i in keys) {
@@ -115,12 +128,15 @@ var stringToColour = function (str) {
 const updateChat = () => {
     let chatHTML = "";
     let keys = [...messages.keys()].sort();
-    const timestamp = Date.now() / 1000;
-    // const max_message_age = 60;
-    const max_message_age = 60 * 60 * 8;
-    let last_timestamp = timestamp - max_message_age;
-    let first_timestamp = timestamp - max_message_age;
-    const chat_speed = 1 / 60.0;
+    const timestamp_ms = Date.now();
+    const timestamp = timestamp_ms / 1000;
+    if (timestamp_ms - last_update_time < config_1.default.DB_POLL_RATE_MS / 2) {
+        // Prevent the browser from hibernating all the calls and sending them all at once when it wakes up.
+        return;
+    }
+    last_update_time = timestamp_ms;
+    let last_timestamp = timestamp - config_1.default.MAX_MESSAGE_AGE;
+    let first_timestamp = timestamp - config_1.default.MAX_MESSAGE_AGE;
     for (let i in keys) {
         let k = keys[i];
         let msg = messages.get(k);
@@ -146,14 +162,14 @@ const updateChat = () => {
         let color = stringToColour(msg.username);
         let text = `
         <div class="shadow chatmsg chatmsg-${msg.provider_name}">
-            <div class="provider provider-${msg.provider_name}">${msg.provider_tag()}@
+            <div class="provider provider-${msg.provider_name}">${msg.provider_tag()}
             </div><div class="badges badges-${msg.provider_name}">${badges}</div><div class="username" style="color: ${color}">${msg.username}
             </div><span class="separator">:</span><div class="message">${message}</div>
         </div>
         `;
-        let spacing = (msg.timestamp - last_timestamp) * chat_speed;
+        let spacing = (msg.timestamp - last_timestamp) * config_1.default.CHAT_SPEED;
         let preftext = "";
-        for (let i = 0; i < spacing && i < 10; i++) {
+        for (let i = 0; i < spacing && i < config_1.default.MAX_SPACERS; i++) {
             preftext += `<div class="spacing"></div>`;
         }
         if (preftext != "") {
@@ -162,9 +178,9 @@ const updateChat = () => {
         chatHTML += text;
         last_timestamp = msg.timestamp;
     }
-    let spacing = (timestamp - last_timestamp) * chat_speed;
+    let spacing = (timestamp - last_timestamp) * config_1.default.CHAT_SPEED;
     let preftext = "";
-    for (let i = 0; i < spacing && i < 10; i++) {
+    for (let i = 0; i < spacing && i < config_1.default.MAX_SPACERS; i++) {
         preftext += `<div class="spacing"></div>`;
     }
     if (preftext != "") {
@@ -210,5 +226,5 @@ window.onload = () => {
     loadData();
     loadLog();
 };
-window.setInterval(loadLog, 250);
-window.setInterval(updateChat, 2 * 1000);
+window.setInterval(loadLog, config_1.default.DB_POLL_RATE_MS);
+window.setInterval(updateChat, 2 * config_1.default.CHAT_UPDATE_RATE_MS);
