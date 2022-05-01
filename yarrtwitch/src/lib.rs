@@ -10,6 +10,7 @@ use thiserror::Error;
 use twitch_api2::helix;
 use twitch_api2::helix::chat::get_channel_chat_badges;
 use twitch_api2::helix::chat::get_channel_emotes;
+use twitch_api2::helix::chat::get_emote_sets;
 use twitch_api2::helix::chat::get_global_chat_badges;
 use twitch_api2::helix::chat::get_global_emotes;
 use twitch_api2::TwitchClient as ApiTwitchClient;
@@ -22,8 +23,11 @@ use yarrdata::{Badge, Event, ProviderQueue, SyncSubscriber};
 pub enum Error {
     #[error("Client is already running, cannot run twice")]
     AlreadyRunning,
+    #[error("Unexpected error: {0:?}")]
+    Unexpected(String),
 }
 
+#[derive(Clone)]
 pub struct Emote {
     pub id: String,
     pub name: String,
@@ -39,6 +43,13 @@ impl Emote {
         }
     }
     pub fn from_channel(emote: &helix::chat::ChannelEmote) -> Self {
+        Self {
+            id: emote.id.to_string(),
+            name: emote.name.clone(),
+            image: emote.images.url_2x.clone(),
+        }
+    }
+    pub fn from_emote(emote: &helix::chat::get_emote_sets::Emote) -> Self {
         Self {
             id: emote.id.to_string(),
             name: emote.name.clone(),
@@ -124,7 +135,49 @@ impl TwitchClient {
             self.emotes.insert(emote.id.clone(), emote);
         }
     }
-    fn emotes_from_str(&self, textemotes: &str) -> Vec<yarrdata::Emote> {
+    // TODO: Not used because it doesn't return IDs for all valid emotes :-(
+    fn _get_emote(&mut self, id: &str) -> Result<Emote> {
+        if let Some(emote) = self.emotes.get(id) {
+            return Ok(emote.to_owned());
+        }
+        let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
+
+        // TODO: This is horrible because we block what originally is an async block.
+        use std::thread;
+        // TODO: This doesn't return emotes for all valid IDs.
+        let the_id = id.to_owned();
+        // let the_id = "301590448".to_owned();
+
+        let token = self.user_token.clone();
+        let handle = thread::spawn(move || -> Result<Vec<get_emote_sets::Emote>> {
+            use tokio::runtime::Runtime;
+
+            // Create the runtime
+            let rt = Runtime::new().unwrap();
+            let request = get_emote_sets::GetEmoteSetsRequest::builder()
+                .emote_set_id(vec![the_id.clone().into()])
+                .build();
+
+            debug!("get_emote({:?}) req: {:?}", the_id, &request);
+            let response: Vec<helix::chat::get_emote_sets::Emote> = rt
+                .block_on(async { client.helix.req_get(request, &token).await })?
+                .data;
+            debug!("get_emote({:?}) => {:?}", the_id, &response);
+            Ok(response)
+        });
+
+        let response = handle
+            .join()
+            .map_err(|e| Error::Unexpected(format!("{:?}", e)))??;
+
+        let emote = response
+            .first()
+            .ok_or_else(|| Error::Unexpected("no emote returned by twitch".to_owned()))?;
+        let emote = Emote::from_emote(emote);
+        self.emotes.insert(emote.id.clone(), emote.clone());
+        Ok(emote)
+    }
+    fn emotes_from_str(&mut self, textemotes: &str, msg: &str) -> Vec<yarrdata::Emote> {
         // .. Tag("emotes", Some("864205:17-24/444572:0-7/724216:9-15"))
         let mut emotes: Vec<yarrdata::Emote> = vec![];
         for nb in textemotes.split('/') {
@@ -137,20 +190,33 @@ impl TwitchClient {
             let mut range = rangetxt.split('-');
             let from: usize = range.next().unwrap_or_default().parse().unwrap_or_default();
             let to: usize = range.next().unwrap_or_default().parse().unwrap_or_default();
-
-            match self.emotes.get(&id) {
-                Some(dbemote) => {
-                    let e = yarrdata::Emote {
-                        id,
-                        from,
-                        to,
-                        name: dbemote.name.to_owned(),
-                        url: dbemote.image.to_owned(),
-                    };
-                    emotes.push(e);
-                }
-                None => warn!("failed to find emote {:?}", id),
-            }
+            let name = msg[from..to + 1].to_owned();
+            let url = format!(
+                "https://static-cdn.jtvnw.net/emoticons/v2/{}/static/light/2.0",
+                id
+            );
+            let e = yarrdata::Emote {
+                id,
+                from,
+                to,
+                name,
+                url,
+            };
+            emotes.push(e);
+            // TODO: Twitch doesn't return emotes for all valid IDs. Manually getting the URL works better :-(
+            // match self.get_emote(&id) {
+            //     Ok(dbemote) => {
+            //         let e = yarrdata::Emote {
+            //             id,
+            //             from,
+            //             to,
+            //             name: dbemote.name.to_owned(),
+            //             url: dbemote.image.to_owned(),
+            //         };
+            //         emotes.push(e);
+            //     }
+            //     Err(e) => warn!("failed to find emote {:?}: {:?}", id, e),
+            // }
         }
         emotes
     }
@@ -315,7 +381,7 @@ impl TwitchClient {
                         }
                         "display-name" => username = value.to_owned(),
                         "badges" => badges = self.badges_from_str(value.as_str()),
-                        "emotes" => emotes = self.emotes_from_str(value.as_str()),
+                        "emotes" => emotes = self.emotes_from_str(value.as_str(), text),
                         _ => {}
                     }
                 }
