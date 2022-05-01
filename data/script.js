@@ -1,10 +1,26 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+// TODO: This does not work -- seems we need a full node.js project for these things...
+// import CONFIG from "./config";
+// Configurable parameters:
+const CONFIG = {
+    // how many messages at most will be held on memory and displayed.
+    MAX_MESSAGES: 50,
+    // How many seconds will a message be displayed before removing.
+    MAX_MESSAGE_AGE: 60 * 60 * 8,
+    // How fast the chat will move up, in "spacers" per second. One spacer is 2px by default.
+    CHAT_SPEED: 1 / 60.0,
+    // Maximum amount of spacers to add (sets the maximum margin between messages).
+    MAX_SPACERS: 10,
+    // Time between queries to yarrosco's DB to check new messages (milliseconds).
+    DB_POLL_RATE_MS: 250,
+    // Time between chat updates - basically to implement the CHAT_SPEED.
+    CHAT_UPDATE_RATE_MS: 2 * 1000,
+    // Define how to display the different providers on-screen
+    PROVIDER_TAG_MAP: new Map([
+        ["twitch", "Tw@"],
+        ["matrix", "Mx@"],
+    ]),
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-// PLEASE UPDATE THE TYPESCRIPT FILE. script.js is automatically updated when running "tsc" on this folder.
-const config_1 = __importDefault(require("./config"));
 class Message {
     constructor(msg) {
         this.provider_name = msg.provider_name;
@@ -25,7 +41,7 @@ class Message {
         }
     }
     provider_tag() {
-        let tag = config_1.default.PROVIDER_TAG_MAP.get(this.provider_name);
+        let tag = CONFIG.PROVIDER_TAG_MAP.get(this.provider_name);
         if (tag) {
             return tag;
         }
@@ -71,7 +87,7 @@ const onLoadData = (xhr) => {
 };
 const onLoadLog = (xhr) => {
     const timestamp_ms = Date.now();
-    if (timestamp_ms - last_load_time < config_1.default.DB_POLL_RATE_MS / 2) {
+    if (timestamp_ms - last_load_time < CONFIG.DB_POLL_RATE_MS / 2) {
         // Prevent the browser from hibernating all the calls and sending them all at once when it wakes up.
         return;
     }
@@ -104,7 +120,7 @@ const reqListener = (xhr) => {
             }
         }
     }
-    let toDelete = messages.size - config_1.default.MAX_MESSAGES;
+    let toDelete = messages.size - CONFIG.MAX_MESSAGES;
     if (toDelete > 0) {
         let keys = [...messages.keys()].sort().slice(0, toDelete);
         for (let i in keys) {
@@ -130,13 +146,13 @@ const updateChat = () => {
     let keys = [...messages.keys()].sort();
     const timestamp_ms = Date.now();
     const timestamp = timestamp_ms / 1000;
-    if (timestamp_ms - last_update_time < config_1.default.DB_POLL_RATE_MS / 2) {
+    if (timestamp_ms - last_update_time < CONFIG.DB_POLL_RATE_MS / 2) {
         // Prevent the browser from hibernating all the calls and sending them all at once when it wakes up.
         return;
     }
     last_update_time = timestamp_ms;
-    let last_timestamp = timestamp - config_1.default.MAX_MESSAGE_AGE;
-    let first_timestamp = timestamp - config_1.default.MAX_MESSAGE_AGE;
+    let last_timestamp = timestamp - CONFIG.MAX_MESSAGE_AGE;
+    let first_timestamp = timestamp - CONFIG.MAX_MESSAGE_AGE;
     for (let i in keys) {
         let k = keys[i];
         let msg = messages.get(k);
@@ -167,9 +183,9 @@ const updateChat = () => {
             </div><span class="separator">:</span><div class="message">${message}</div>
         </div>
         `;
-        let spacing = (msg.timestamp - last_timestamp) * config_1.default.CHAT_SPEED;
+        let spacing = (msg.timestamp - last_timestamp) * CONFIG.CHAT_SPEED;
         let preftext = "";
-        for (let i = 0; i < spacing && i < config_1.default.MAX_SPACERS; i++) {
+        for (let i = 0; i < spacing && i < CONFIG.MAX_SPACERS; i++) {
             preftext += `<div class="spacing"></div>`;
         }
         if (preftext != "") {
@@ -178,9 +194,9 @@ const updateChat = () => {
         chatHTML += text;
         last_timestamp = msg.timestamp;
     }
-    let spacing = (timestamp - last_timestamp) * config_1.default.CHAT_SPEED;
+    let spacing = (timestamp - last_timestamp) * CONFIG.CHAT_SPEED;
     let preftext = "";
-    for (let i = 0; i < spacing && i < config_1.default.MAX_SPACERS; i++) {
+    for (let i = 0; i < spacing && i < CONFIG.MAX_SPACERS; i++) {
         preftext += `<div class="spacing"></div>`;
     }
     if (preftext != "") {
@@ -226,5 +242,5 @@ window.onload = () => {
     loadData();
     loadLog();
 };
-window.setInterval(loadLog, config_1.default.DB_POLL_RATE_MS);
-window.setInterval(updateChat, 2 * config_1.default.CHAT_UPDATE_RATE_MS);
+window.setInterval(loadLog, CONFIG.DB_POLL_RATE_MS);
+window.setInterval(updateChat, 2 * CONFIG.CHAT_UPDATE_RATE_MS);

@@ -1,6 +1,7 @@
-"use strict";
 // Configurable parameters:
-Object.defineProperty(exports, "__esModule", { value: true });
+
+// NOTE: THIS DOES NOT WORK!! - please refer to script.ts
+// FIXME: it's not possible to import config.ts from script.ts without creating a full node.js app.
 const CONFIG = {
     // how many messages at most will be held on memory and displayed.
     MAX_MESSAGES: 50,
@@ -19,5 +20,6 @@ const CONFIG = {
         ["twitch", "Tw@"],
         ["matrix", "Mx@"],
     ]),
-};
-exports.default = CONFIG;
+}
+
+export default CONFIG;
