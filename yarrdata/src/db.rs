@@ -2,7 +2,10 @@ extern crate tokio;
 use crate::Event;
 use anyhow::Result;
 use log::error;
+use log::info;
 use std::collections::BTreeMap;
+use std::time::Duration;
+use std::time::SystemTime;
 use tokio::fs::File;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::AsyncWriteExt;
@@ -54,12 +57,14 @@ pub struct Log {
     maxsize: usize,
     log_path: String,
     checkpoint_path: String,
+    last_checkpoint: SystemTime,
     log_lines: usize,
     log_writer: Option<BufWriter<File>>,
     pub data: BTreeMap<EventId, CachedEvent>,
 }
 
 impl Log {
+    const MAX_DURATION: Duration = Duration::from_secs(60);
     pub fn new(maxsize: usize, log_path: String, checkpoint_path: String) -> Self {
         Self {
             maxsize,
@@ -67,6 +72,7 @@ impl Log {
             checkpoint_path,
             log_lines: 0,
             log_writer: None,
+            last_checkpoint: SystemTime::now(),
             data: BTreeMap::new(),
         }
     }
@@ -141,7 +147,7 @@ impl Log {
         let mut writer = BufWriter::new(File::create(self.log_path.clone()).await?);
         writer.flush().await?;
         self.log_writer = Some(writer);
-
+        self.last_checkpoint = SystemTime::now();
         Ok(())
     }
     async fn get_writer(&mut self) -> Result<&mut BufWriter<File>> {
@@ -156,7 +162,15 @@ impl Log {
         // Seems flush is needed or on program stop wouldn't write.
         writer.flush().await?;
         self.log_lines += 1;
-        if self.log_lines > self.maxsize {
+        let elapsed = self.last_checkpoint.elapsed().unwrap_or_default();
+        let time_refresh = self.log_lines > (self.maxsize / 10 + 1) && elapsed > Self::MAX_DURATION;
+        if self.log_lines > self.maxsize || time_refresh {
+            info!(
+                "Checkpointing DB: {:?}/{:?} ({:})",
+                self.log_lines,
+                self.maxsize,
+                human_duration(elapsed)
+            );
             self.perform_checkpoint().await?;
         }
         Ok(())
@@ -192,4 +206,21 @@ impl Log {
 
         Ok(MessageIgnored::None)
     }
+}
+
+fn human_duration(d: Duration) -> String {
+    let mut t = d.as_secs();
+    if t < 120 {
+        return format!("{}s", t);
+    }
+    t /= 60;
+    if t < 120 {
+        return format!("{}m", t);
+    }
+    t /= 60;
+    if t < 48 {
+        return format!("{}h", t);
+    }
+    t /= 24;
+    format!("{}d", t)
 }

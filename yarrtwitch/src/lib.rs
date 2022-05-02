@@ -94,6 +94,7 @@ impl TwitchClient {
         })
     }
     pub async fn get_global_emotes(&self) -> Result<Vec<helix::chat::GlobalEmote>> {
+        // As it stands now, this is not used. Emotes are assumed to map to an URL.
         let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
         let request = get_global_emotes::GetGlobalEmotesRequest::default();
         let global_emotes: Vec<helix::chat::GlobalEmote> =
@@ -102,6 +103,7 @@ impl TwitchClient {
         Ok(global_emotes)
     }
     pub async fn get_channel_emotes(&self) -> Result<Vec<helix::chat::ChannelEmote>> {
+        // As it stands now, this is not used. Emotes are assumed to map to an URL.
         let client: ApiTwitchClient<'static, reqwest::Client> = ApiTwitchClient::default();
         let request = get_channel_emotes::GetChannelEmotesRequest::builder()
             .broadcaster_id(self.user_token.user_id.to_string())
@@ -112,6 +114,7 @@ impl TwitchClient {
         Ok(channel_emotes)
     }
     pub async fn load_emotes(&mut self) {
+        // As it stands now, this is not used. Emotes are assumed to map to an URL.
         let ch_emotes = match self.get_channel_emotes().await {
             Ok(x) => x,
             Err(e) => {
@@ -300,7 +303,7 @@ impl TwitchClient {
         while let Some(resmessage) = stream.next().await {
             match resmessage {
                 Ok(message) => {
-                    if let Err(e) = self.process_stream(&message) {
+                    if let Err(e) = self.process_stream_sync(&message) {
                         error!("error processing message {:?}: {:?}", &message, e);
                     } else {
                         err_count = 0;
@@ -323,7 +326,7 @@ impl TwitchClient {
         Ok(())
     }
 
-    fn process_stream(&mut self, message: &Message) -> Result<()> {
+    fn process_stream_sync(&mut self, message: &Message) -> Result<()> {
         match &message.command {
             Command::PING(_, _) | Command::PONG(_, _) => {}
             Command::NOTICE(tgt, msg) => {
@@ -342,12 +345,12 @@ impl TwitchClient {
                     };
                 }
             },
-            Command::PRIVMSG(tgt, msg) => self.process_msg(tgt, msg, message)?,
+            Command::PRIVMSG(tgt, msg) => self.process_msg_sync(tgt, msg, message)?,
             c => debug!(": {:?}", c),
         }
         Ok(())
     }
-    fn process_msg(&mut self, target: &str, text: &str, message: &Message) -> Result<()> {
+    fn process_msg_sync(&mut self, target: &str, text: &str, message: &Message) -> Result<()> {
         use yarrdata::Message;
         let username = match message.prefix.as_ref().unwrap() {
             Prefix::ServerName(sn) => sn,
@@ -398,7 +401,8 @@ impl TwitchClient {
             badges,
             emotes,
         });
-        self.queue.publish(e)?;
+        // This may block but the queue library promises non-blocking behavior.
+        self.queue.publish_sync(e)?;
         Ok(())
     }
 }

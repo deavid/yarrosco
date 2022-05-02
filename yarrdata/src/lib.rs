@@ -104,10 +104,10 @@ impl ProviderQueue {
             subscriber: sb,
         }
     }
-    pub fn close(&mut self) -> Result<()> {
+    pub fn close_sync(&mut self) -> Result<()> {
         Ok(block_on(async move { self.publisher.close().await })?)
     }
-    pub fn publish(&mut self, e: Event) -> Result<()> {
+    pub fn publish_sync(&mut self, e: Event) -> Result<()> {
         Ok(block_on(async move { self.publisher.send(e).await })?)
     }
     pub fn subscribe(&self) -> Subscriber<Event> {

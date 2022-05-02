@@ -66,7 +66,7 @@ impl MatrixClient {
         loop {
             match rx.recv_async().await {
                 Ok((e, r)) => {
-                    if let Err(err) = self.process_message(e, r) {
+                    if let Err(err) = self.process_message_sync(e, r) {
                         error!("error processing message: {:?}", err);
                     }
                 }
@@ -82,7 +82,7 @@ impl MatrixClient {
         Ok(())
     }
 
-    fn process_message(
+    fn process_message_sync(
         &mut self,
         ev: SyncMessageEvent<MessageEventContent>,
         room: Room,
@@ -100,8 +100,10 @@ impl MatrixClient {
             let username = ev.sender.localpart().to_owned();
             let timestamp: u64 = ev.origin_server_ts.as_secs().into();
             if let MessageType::Text(msg) = ev.content.msgtype {
+                // This might block, but the type of queue promises no blocking
+                // and anyway this is the only thing we do in this loop.
                 self.queue
-                    .publish(Event::Message(Message {
+                    .publish_sync(Event::Message(Message {
                         provider_name: self.queue.provider_name.clone(),
                         message: msg.body.clone(),
                         room: room.name().unwrap_or_default(),

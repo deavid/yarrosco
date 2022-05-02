@@ -108,7 +108,9 @@ impl SaltAndCipher {
     }
 }
 
-// TODO: If salt is in the message, it will need a key derivation each step,
-//       and the raw password to be held in memory for longer periods.
+// As salt is in the message, it will need a key derivation each step,
+// and the raw password to be held in memory for longer periods.
+// Given that this is done in threads in yarrcfg, and there should be just a
+// few, it should be okay. This step takes <200ms.
 
 mod tests;

@@ -3,6 +3,7 @@ use futures::StreamExt;
 use log::LevelFilter;
 use log::{error, info};
 use std::{borrow::Borrow, sync::Arc};
+use tokio::sync::Mutex;
 use tokio::task;
 use yarrdata::db::{self, MessageIgnored};
 use yarrdata::Event;
@@ -20,24 +21,25 @@ async fn main() -> Result<()> {
         .init();
 
     let cfg = yarrcfg::parse_config()?;
-
-    // Create yarrtwitch (spawn a thread?)
-    // TODO: remove the expect, twitch is not mandatory really.
-    let twitch_cfg = cfg.twitch.expect("Twitch config is needed");
-
-    let mut tw = TwitchClient::new(&twitch_cfg).await?;
-    // Subscribe to twitch
-    let mut twitch_sub = tw.subscribe();
-    let tw_future = task::spawn(async move { tw.run().await });
+    let mut subs = vec![];
+    let mut service_fut = vec![];
+    // Create yarrtwitch
+    if let Some(twitch_cfg) = cfg.twitch.as_ref() {
+        let mut tw = TwitchClient::new(twitch_cfg).await?;
+        // Subscribe to twitch
+        subs.push(tw.subscribe());
+        service_fut.push(task::spawn(async move { tw.run().await }));
+    }
 
     // Create and connect to matrix
-    let matrix_cfg = cfg.matrix.expect("Matrix config is needed");
+    if let Some(matrix_cfg) = cfg.matrix.as_ref() {
+        let mut mx = MatrixClient::new(matrix_cfg)?;
+        // Subscribe to matrix
+        subs.push(mx.subscribe());
+        service_fut.push(task::spawn(async move { mx.run().await }));
+    }
 
-    let mut mx = MatrixClient::new(&matrix_cfg)?;
-    // Subscribe to matrix
-    let mut matrix_sub = mx.subscribe();
-    let mx_future = task::spawn(async move { mx.run().await });
-
+    // Read from database
     let mut log = db::Log::new(100, cfg.logfile, cfg.checkpointfile);
     if let Err(e) = log.load().await {
         error!("couldn't load the database: {:?}", e);
@@ -45,26 +47,31 @@ async fn main() -> Result<()> {
     for (_, ce) in log.data.iter() {
         process_message(&ce.event);
     }
+    let log: Arc<Mutex<db::Log>> = Arc::new(Mutex::new(log));
     // TODO: Implement a yarrosco-secondary to have as a background + backup (name: yarrly? yarrdy? female-parrot)
-
     // Upon receiving a new matrix message...
-    loop {
-        tokio::select! {
-            Some(v) = twitch_sub.next() => process_message_log(&mut log, v).await,
-            Some(v) = matrix_sub.next() => process_message_log(&mut log, v).await,
-            else => break,
-        }
-    }
+    let futures_sub = subs.into_iter().map(|sub| {
+        sub.for_each_concurrent(2, |event| async {
+            process_message_log(Arc::clone(&log), event).await;
+        })
+    });
+    use futures::stream::FuturesUnordered;
+    let mut futures = FuturesUnordered::new();
+    futures.extend(futures_sub);
+    while futures.next().await.is_some() {}
 
-    tw_future.await??;
-    mx_future.await??;
+    for fut in service_fut {
+        fut.await??;
+    }
     Ok(())
 }
 
-async fn process_message_log(logger: &mut db::Log, ev: Arc<Event>) {
+async fn process_message_log(logger: Arc<Mutex<db::Log>>, ev: Arc<Event>) {
     let event: &Event = ev.borrow();
-
-    match logger.push(event.clone()).await {
+    let mut logger_lck = logger.lock().await;
+    let result = logger_lck.push(event.clone()).await;
+    drop(logger_lck);
+    match result {
         Ok(MessageIgnored::None) => process_message(event),
         Ok(reason) => info!("ignored message {:?}: {:?}", reason, event),
         Err(e) => error!("trying to write message to log: {:?}", e),
