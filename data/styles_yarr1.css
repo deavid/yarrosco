@@ -24,11 +24,13 @@ body {
 }
 
 .badge,
+.provider-logo-img,
 .emote {
     filter: drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000) drop-shadow(0px 0px 1px #000);
 }
 
-.badge {
+.badge,
+.provider-logo-img {
     max-width: 28px;
     max-height: 28px;
     margin-right: 1px;

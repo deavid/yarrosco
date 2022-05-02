@@ -17,8 +17,10 @@ const CONFIG = {
     CHAT_UPDATE_RATE_MS: 2 * 1000,
     // Define how to display the different providers on-screen
     PROVIDER_TAG_MAP: new Map([
-        ["twitch", "Tw@"],
-        ["matrix", "Mx@"],
+        // ["twitch", "Tw@"],
+        // ["matrix", "Mx@"],
+        ["twitch", `<img src="logos-third-party/TwitchGlitchPurple.png" class="provider-logo-img">`],
+        ["matrix", `<img src="logos-third-party/Matrix-Element-logo-mark-primary.png" class="provider-logo-img">`],
     ]),
 }
 
