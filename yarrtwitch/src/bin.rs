@@ -16,7 +16,11 @@ async fn main() -> Result<()> {
     env_logger::init();
 
     let cfg = parse_config()?;
-    let twitch_cfg = cfg.twitch.expect("Twitch config is needed to run IRC");
+    let (_, twitch_cfg) = cfg
+        .twitch
+        .iter()
+        .next()
+        .expect("Twitch config is needed to run IRC");
     // -----
 
     let client: TwitchClient<'static, reqwest::Client> = TwitchClient::default();
@@ -27,7 +31,7 @@ async fn main() -> Result<()> {
     dbg!(response);
 
     // -----
-    let mut tw = yarrtwitch::TwitchClient::new(&twitch_cfg).await?;
+    let mut tw = yarrtwitch::TwitchClient::new(twitch_cfg).await?;
 
     let mut twitch_sub = tw.subscribe();
     let tw_future = tokio::task::spawn(async move { tw.run().await });

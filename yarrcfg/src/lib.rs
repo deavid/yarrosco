@@ -16,8 +16,8 @@ pub enum CfgError {
 pub struct Config {
     pub logfile: String,
     pub checkpointfile: String,
-    pub twitch: Option<Twitch>,
-    pub matrix: Option<Matrix>,
+    pub twitch: BTreeMap<String, Twitch>,
+    pub matrix: BTreeMap<String, Matrix>,
 }
 
 #[derive(Deserialize, Debug)]

@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
     let mut subs = vec![];
     let mut service_fut = vec![];
     // Create yarrtwitch
-    if let Some(twitch_cfg) = cfg.twitch.as_ref() {
+    for (_name, twitch_cfg) in cfg.twitch.iter() {
         let mut tw = TwitchClient::new(twitch_cfg).await?;
         // Subscribe to twitch
         subs.push(tw.subscribe());
@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
     }
 
     // Create and connect to matrix
-    if let Some(matrix_cfg) = cfg.matrix.as_ref() {
+    for (_name, matrix_cfg) in cfg.matrix.iter() {
         let mut mx = MatrixClient::new(matrix_cfg)?;
         // Subscribe to matrix
         subs.push(mx.subscribe());

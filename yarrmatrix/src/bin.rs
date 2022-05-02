@@ -16,8 +16,12 @@ async fn main() -> Result<()> {
         .init();
 
     let cfg = parse_config()?;
-    let matrix_cfg = cfg.matrix.expect("Matrix config is needed to run IRC");
-    let mut mx = yarrmatrix::MatrixClient::new(&matrix_cfg)?;
+    let (_, matrix_cfg) = cfg
+        .matrix
+        .iter()
+        .next()
+        .expect("Matrix config is needed to run IRC");
+    let mut mx = yarrmatrix::MatrixClient::new(matrix_cfg)?;
 
     let mut matrix_sub = mx.subscribe();
     let mx_future = tokio::task::spawn(async move { mx.run().await });
