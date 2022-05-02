@@ -44,6 +44,9 @@ async fn main() -> Result<()> {
     if let Err(e) = log.load().await {
         error!("couldn't load the database: {:?}", e);
     }
+    if let Err(e) = log.perform_checkpoint().await {
+        error!("couldn't checkpoint the database: {:?}", e);
+    }
     for (_, ce) in log.data.iter() {
         process_message(&ce.event);
     }

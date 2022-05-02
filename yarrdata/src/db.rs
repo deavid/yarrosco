@@ -131,7 +131,6 @@ impl Log {
                 }
             }
         }
-        self.perform_checkpoint().await?;
         Ok(())
     }
     pub async fn perform_checkpoint(&mut self) -> Result<()> {
@@ -212,8 +211,9 @@ impl Log {
         }
 
         let ce = CachedEvent::from_event(event)?;
-        self.log(ce.json.clone()).await?;
+        let json = ce.json.clone();
         self.data.insert(key, ce);
+        self.log(json).await?;
 
         Ok(MessageIgnored::None)
     }
