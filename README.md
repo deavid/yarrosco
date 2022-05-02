@@ -73,4 +73,12 @@ Licensed under Apache License v2.
   The dependencies of the different programs have their own licenses. 
   The resulting binaries may or may not be licensable as Apache License v2.
 
+### Folder /data/logos-third-party is exempt from this license
+
+All images from /data/logos-third-party are exempted from the Apache License v2. 
+
+This folder contains official logotypes from the different providers and those
+are covered by trademark and copyright.
+
+For more information, see [data/logos-third-party/README_licenses.md](./data/logos-third-party/README_licenses.md)
 
