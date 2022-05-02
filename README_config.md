@@ -105,17 +105,21 @@ Here's the sample config:
 logfile = 'yarrdb_log.jsonl'
 checkpointfile = 'yarrdb_data.jsonl'
 
-[twitch]
+[twitch.servername]
 username = 'your_twitch_username'
 hostname = 'irc.chat.twitch.tv:6697'
 channels = ["#your_twitch_username"]
 oauth_token = '%%TWITCH_OAUTH_TOKEN%%'
 
-[matrix]
+[matrix.servername]
 user_id = "@user:matrix.org"
 access_token = '%%MATRIX_ACCESS_TOKEN%%'
 room_id = "!roomID:matrix.org"
 ```
+
+The `servername` in `[twitch.servername]` is used to be able to have different
+connections to the same provider. You can name each one as you like, however 
+this is still pretty much experimental. Proceed at your own risk.
 
 ### Database files
     logfile = 'yarrdb_log.jsonl'

@@ -19,9 +19,8 @@ Current state
 This software is under heavy development and it's difficult to get running.
 Functionality is very limited: it only covers strictly one use case.
 
-Only works if it is connected to Matrix and Twitch. Both are
-mandatory, and only one account and room for each. Anything more or less, it is
-not currently supported.
+Connects to Matrix and Twitch. However, only connecting with exactly one of each
+has been tested. Any other combination wasn't tested and may or may not work.
 
 Outputs to OBS via Browser. OBS Browser plugin is not tested with Yarrosco.
 The only tested method is having a local web server running, run Firefox ESR to
