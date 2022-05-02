@@ -34,7 +34,7 @@ fn default_provider() -> String {
     "no-provider".to_string()
 }
 
-fn default_timestamp() -> u64 {
+pub fn default_timestamp() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     let start = SystemTime::now();
     let since_the_epoch = start.duration_since(UNIX_EPOCH).unwrap();

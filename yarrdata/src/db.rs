@@ -1,4 +1,5 @@
 extern crate tokio;
+use crate::default_timestamp;
 use crate::Event;
 use anyhow::Result;
 use log::error;
@@ -145,6 +146,16 @@ impl Log {
         } // ensure writer is closed at this point.
         self.log_lines = 0;
         let mut writer = BufWriter::new(File::create(self.log_path.clone()).await?);
+        // Keep 10 seconds or 5 messages.
+        let ts_from = default_timestamp() - 10;
+        let first_msg = self.data.len() - 5;
+        for (n, (_, ce)) in self.data.iter().enumerate() {
+            if n < first_msg && ce.event.timestamp() < ts_from {
+                continue;
+            }
+            writer.write_all(ce.json.as_bytes()).await?;
+            self.log_lines += 1;
+        }
         writer.flush().await?;
         self.log_writer = Some(writer);
         self.last_checkpoint = SystemTime::now();
