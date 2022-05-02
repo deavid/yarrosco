@@ -95,9 +95,78 @@ Repeat this for as many secrets do you need.
 
 You can use this for anywhere in your config, but only the passwords and oauth_tokens are protected. Other fields might be printed in debug messages.
 
-(.. TBD ..)
-
 ## yarrosco.toml
 
 The config `yarrosco.toml` contains all configuration options possible. Tune
 them to your liking.
+
+Here's the sample config:
+```
+logfile = 'yarrdb_log.jsonl'
+checkpointfile = 'yarrdb_data.jsonl'
+
+[twitch]
+username = 'your_twitch_username'
+hostname = 'irc.chat.twitch.tv:6697'
+channels = ["#your_twitch_username"]
+oauth_token = '%%TWITCH_OAUTH_TOKEN%%'
+
+[matrix]
+user_id = "@user:matrix.org"
+access_token = '%%MATRIX_ACCESS_TOKEN%%'
+room_id = "!roomID:matrix.org"
+```
+
+### Database files
+    logfile = 'yarrdb_log.jsonl'
+    checkpointfile = 'yarrdb_data.jsonl'
+
+By default they appear in the current working directory and contain the messages
+received. This used to send the messages to the HTML app, as well as recovering 
+the old messages in case of app restart.
+
+### Twitch conection parameters
+    username = 'your_twitch_username'
+    hostname = 'irc.chat.twitch.tv:6697'
+    channels = ["#your_twitch_username"]
+    oauth_token = '%%TWITCH_OAUTH_TOKEN%%'
+
+* username: The username that will be used for logging in. (currently unused, as it's detected from the token)
+* hostname: Leave this as is, it needs to point to twitch IRC server.
+* channels: List of channels to connect to. WE only tested one channel so far.
+* oauth_token: The user oauth token from an "Implicit Grant Flow" (https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow) 
+
+> **NOTE:** Please don't prefix the token with "oauth:", the application does this for you.
+
+#### Yarrosco's Twitch App
+
+There's an already existing application named 'Yarrosco' for twitch with ClientID `7gt2ionh6kcc4ejhxdjz0y7vttuh9b`.
+
+It also has several OAuth Redirect URLs for convenience:
+* http://localhost/
+* http://localhost:8080/
+* http://localhost:13000/
+
+You could get a token by directly navigating to:
+https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=7gt2ionh6kcc4ejhxdjz0y7vttuh9b&redirect_uri=http://localhost&scope=channel%3Amanage%3Apolls+channel%3Aread%3Apolls&state=c3ab8aa609ea11e793ae92361f002671
+
+This will send your browser to something like `http://localhost/#access_token=a6nsf2dfbglhf&scope=...`
+
+Just copy the access token from the address bar.
+
+### Matrix connection parameters
+    [matrix]
+    user_id = "@user:matrix.org"
+    access_token = '%%MATRIX_ACCESS_TOKEN%%'
+    room_id = "!roomID:matrix.org"
+
+* user_id: The username in matrix used to log in. Currently we only use the host part from it to see which server to connect to.
+* access_token: The token that represents your account
+* room_id: The internal ID of the room (not the name) that will be captured. In Element, Room Info -> Settings -> Advanced -> Internal room ID.
+
+#### How to get the access token
+
+1. Log in to the account you want to get the access token for. 
+2. Click on the name in the top left corner, then "Settings".
+3. Click the "Help & About" tab (left side of the dialog).
+4. Scroll to the bottom and click on `<click to reveal>` part of Access Token.
