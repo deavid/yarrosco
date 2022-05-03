@@ -14,3 +14,7 @@ log = "0.4"
 anyhow = "1.0"
 tokio = { version = "1.17", features = ["full"] }
 futures = "0.3"
+fontdb = "0.9"
+ttf-parser = "0.15"
+# usvg is not needed if not rendering
+usvg = "0.22"
