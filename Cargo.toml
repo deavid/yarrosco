@@ -8,4 +8,5 @@ members = [
     "yarrosco",
     "yarrdata",
     "yarrsvg",
+    "yarrpng",
 ]
