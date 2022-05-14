@@ -20,6 +20,7 @@ impl Font {
         };
         Self { face, size: 1.0 }
     }
+    #[allow(dead_code)]
     pub fn print_info(&self) {
         let family_name = self
             .face

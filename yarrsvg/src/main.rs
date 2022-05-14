@@ -6,7 +6,7 @@ use log::error;
 use log::info;
 use log::LevelFilter;
 use svg::node;
-use svg::node::element;
+// use svg::node::element;
 use svg::node::element::Definitions;
 use svg::node::element::Element;
 use svg::node::element::Filter;
